@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Friendwave Web
 
-## Getting Started
+The Next.js frontend for Friendwave. It talks to the
+[Friendwave API](../../BackendProjects/Friendwave) (`docs/API.md` there) and logs users in with Auth0.
 
-First, run the development server:
+Stack: Next.js 16 (App Router, Cache Components), React 19, Tailwind 4, `@auth0/nextjs-auth0` v4, pnpm.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Run it
+
+1. Start the API first (in `BackendProjects/Friendwave`): `npm run dev` → `http://localhost:4000`
+2. Here:
+   ```bash
+   pnpm install
+   cp .env.example .env.local   # then fill in AUTH0_CLIENT_ID / AUTH0_CLIENT_SECRET, and AUTH0_SECRET (openssl rand -hex 32)
+   pnpm dev                     # http://localhost:3000
+   ```
+
+The Auth0 application must be a **Regular Web Application**, with:
+- Allowed Callback URLs `http://localhost:3000/auth/callback`
+- Allowed Logout URLs `http://localhost:3000`
+- User access to **Friendwave API** authorized (APIs → Friendwave API → Application Access)
+
+## How it fits together
+
+```
+Browser ──▶ Next.js server ──(Bearer access token)──▶ Friendwave API
+              │
+              └─ proxy.ts: /auth/login, /auth/logout, /auth/callback (Auth0 SDK)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **The access token stays on the server.** Pages are Server Components that call the API through
+  `src/lib/api.ts` (`api()` for one object, `apiPage()` for lists with `nextCursor`).
+- **Mutations** (like, follow) are Server Actions in `src/lib/actions.ts`, called from small Client
+  Components that update instantly (optimistic UI).
+- **Cache Components** is on, so anything that reads the session renders inside `<Suspense>`. The
+  rest of the page is a static shell that loads instantly. See `src/app/layout.tsx` and `src/app/page.tsx`.
+- **Types come from the API.** `src/lib/api-types.ts` is generated from the API's OpenAPI spec, and
+  `src/interfaces/api.ts` gives the types short names. Regenerate after API changes (with the API running):
+  ```bash
+  pnpm gen:api
+  ```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+  app/            pages: / (landing or feed), /users/[id] (profile), error + not-found
+  components/     avatar, post card, like/follow buttons, user menu, skeletons
+  interfaces/     API types (aliases over the generated file)
+  lib/            auth0 client, API helper, server actions, formatting
+  proxy.ts        Auth0 routes + session refresh
+```
 
-## Learn More
+## Scripts
 
-To learn more about Next.js, take a look at the following resources:
+| | |
+|---|---|
+| `pnpm dev` / `build` / `start` | Next.js |
+| `pnpm lint` | ESLint |
+| `pnpm format` | Prettier (sorts imports and Tailwind classes) |
+| `pnpm gen:api` | regenerate API types |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Next up
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Chats with live messages (socket.io), comments, creating posts, stories, and profile editing. The API
+already supports all of them.

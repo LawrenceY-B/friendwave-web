@@ -1,69 +1,81 @@
-import Image from "next/image";
+import { PostCard } from "@/components/post-card";
+import { PostSkeleton } from "@/components/post-skeleton";
+import type { Post } from "@/interfaces/api";
+import { apiPage } from "@/lib/api";
+import { auth0 } from "@/lib/auth0";
+import Link from "next/link";
+import { Suspense } from "react";
 
-export default function Home() {
+export default function HomePage({ searchParams }: PageProps<"/">) {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+    <Suspense fallback={<FeedSkeleton />}>
+      <Home searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+// Logged out: landing page. Logged in: your feed.
+async function Home({ searchParams }: { searchParams: PageProps<"/">["searchParams"] }) {
+  const session = await auth0.getSession();
+  if (!session) return <Landing />;
+
+  const { cursor } = await searchParams;
+  const query = typeof cursor === "string" && /^[0-9a-f]{24}$/.test(cursor) ? `?cursor=${cursor}` : "";
+  const { items, nextCursor } = await apiPage<Post>(`/api/feed${query}`);
+
+  if (items.length === 0) {
+    return (
+      <p className="py-20 text-center text-neutral-500">
+        {query ? "No more posts." : "Your feed is empty. Follow people to see their posts here."}
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {items.map((post) => (
+        <PostCard key={post.id} post={post} />
+      ))}
+      {nextCursor && (
+        <Link
+          href={`/?cursor=${nextCursor}`}
+          className="block rounded-lg border border-neutral-200 py-2 text-center text-sm hover:bg-neutral-100 dark:border-neutral-800 dark:hover:bg-neutral-900"
+        >
+          Older posts
+        </Link>
+      )}
+    </div>
+  );
+}
+
+function Landing() {
+  return (
+    <section className="flex flex-col items-center gap-6 py-24 text-center">
+      <h1 className="text-4xl font-bold tracking-tight">Friendwave</h1>
+      <p className="max-w-sm text-neutral-600 dark:text-neutral-400">Connect with friends and share moments.</p>
+      <div className="flex gap-3">
+        <a
+          href="/auth/login"
+          className="rounded-full bg-neutral-900 px-5 py-2 font-medium text-white dark:bg-white dark:text-neutral-900"
+        >
+          Log in
+        </a>
+        <a
+          href="/auth/login?screen_hint=signup"
+          className="rounded-full border border-neutral-300 px-5 py-2 font-medium dark:border-neutral-700"
+        >
+          Sign up
+        </a>
+      </div>
+    </section>
+  );
+}
+
+function FeedSkeleton() {
+  return (
+    <div className="space-y-6">
+      <PostSkeleton />
+      <PostSkeleton />
     </div>
   );
 }
