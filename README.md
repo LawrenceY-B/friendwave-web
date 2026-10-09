@@ -28,8 +28,11 @@ Browser ──▶ Next.js server ──(Bearer access token)──▶ Friendwave
               └─ proxy.ts: /auth/login, /auth/logout, /auth/callback (Auth0 SDK)
 ```
 
-- **The access token stays on the server.** Pages are Server Components that call the API through
+- **Pages fetch on the server.** They're Server Components that call the API through
   `src/lib/api.ts` (`api()` for one object, `apiPage()` for lists with `nextCursor`).
+- **Live chat is the exception: it connects from the browser.** `src/lib/socket.ts` gets a token with
+  the SDK's client `getAccessToken()` (served by `/auth/access-token`) and opens a socket.io connection
+  to the API. A fresh token is fetched on every reconnect.
 - **Mutations** (like, follow) are Server Actions in `src/lib/actions.ts`, called from small Client
   Components that update instantly (optimistic UI).
 - **Cache Components** is on, so anything that reads the session renders inside `<Suspense>`. The
@@ -44,10 +47,10 @@ Browser ──▶ Next.js server ──(Bearer access token)──▶ Friendwave
 
 ```
 src/
-  app/            pages: / (landing or feed), /users/[id] (profile), error + not-found
-  components/     avatar, post card, like/follow buttons, user menu, skeletons
+  app/            pages: / (landing or feed), /users/[id] (profile), /chats, /chats/[id], error + not-found
+  components/     avatar, post card, like/follow buttons, chat room, user menu, skeletons
   interfaces/     API types (aliases over the generated file)
-  lib/            auth0 client, API helper, server actions, formatting
+  lib/            auth0 client, API helper, server actions, socket, formatting
   proxy.ts        Auth0 routes + session refresh
 ```
 
@@ -60,7 +63,16 @@ src/
 | `pnpm format` | Prettier (sorts imports and Tailwind classes) |
 | `pnpm gen:api` | regenerate API types |
 
+## Live chat (`src/components/chat-room.tsx`)
+
+- The page loads the chat and its latest 30 messages on the server, then the browser keeps them live.
+- **Sending** shows the message immediately ("Sending…"), sends it over the socket and swaps in the saved
+  message from the server's acknowledgement. If the socket is down, it sends over HTTP instead.
+- **No duplicates:** a message can arrive both as the acknowledgement and as the live `message:new`
+  event, so every update goes through one `upsert` keyed by message id.
+- **Reconnects:** after a drop, it fetches the latest page to catch up on anything missed.
+- Delete your own messages (hover). Edits and deletes made elsewhere show up live.
+
 ## Next up
 
-Chats with live messages (socket.io), comments, creating posts, stories, and profile editing. The API
-already supports all of them.
+Comments, creating posts, stories, and profile editing. The API already supports all of them.

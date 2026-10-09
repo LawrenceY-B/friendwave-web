@@ -1,6 +1,7 @@
 import { Avatar } from "@/components/avatar";
 import { FollowButton } from "@/components/follow-button";
 import type { Post, Profile } from "@/interfaces/api";
+import { openChat } from "@/lib/actions";
 import { api, ApiError, apiPage } from "@/lib/api";
 import { plural } from "@/lib/format";
 import Image from "next/image";
@@ -38,7 +39,20 @@ async function ProfileView({ params }: { params: PageProps<"/users/[id]">["param
         <div className="min-w-0 flex-1 space-y-3">
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="truncate text-xl font-semibold">{profile.username}</h1>
-            {!profile.isMe && <FollowButton userId={profile.id} isFollowing={profile.isFollowing} />}
+            {!profile.isMe && (
+              <>
+                <FollowButton userId={profile.id} isFollowing={profile.isFollowing} />
+                {/* A Server Action as a form action: works even before JavaScript loads */}
+                <form action={openChat.bind(null, profile.id)}>
+                  <button
+                    type="submit"
+                    className="rounded-lg border border-neutral-300 px-4 py-1.5 text-sm font-medium dark:border-neutral-700"
+                  >
+                    Message
+                  </button>
+                </form>
+              </>
+            )}
           </div>
           <ul className="flex gap-5 text-sm">
             <li>

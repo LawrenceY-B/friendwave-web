@@ -25,6 +25,9 @@ export async function UserMenu() {
       <Link href="/" className="hover:underline">
         Feed
       </Link>
+      <Link href="/chats" className="hover:underline">
+        Chats
+      </Link>
       <Link href={`/users/${me.id}`} className="flex items-center gap-2 hover:underline">
         <Avatar user={me} size="sm" />
         <span className="hidden sm:inline">{me.username}</span>
