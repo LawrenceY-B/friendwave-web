@@ -1,4 +1,4 @@
-import { UserMenu } from "@/components/user-menu";
+import { MobileNav, UserMenu } from "@/components/user-menu";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
@@ -38,7 +38,11 @@ export default function RootLayout({ children, modal }: LayoutProps<"/">) {
             </Suspense>
           </div>
         </header>
-        <main className="mx-auto w-full max-w-xl flex-1 px-4 py-6">{children}</main>
+        {/* Extra bottom padding on phones so the bottom bar never covers content */}
+        <main className="mx-auto w-full max-w-xl flex-1 px-4 pt-6 pb-28 sm:pb-6">{children}</main>
+        <Suspense fallback={null}>
+          <MobileNav />
+        </Suspense>
         {modal}
       </body>
     </html>

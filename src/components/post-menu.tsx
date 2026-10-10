@@ -46,6 +46,24 @@ export function PostMenu({ post, meId }: { post: Post; meId: string }) {
     }
   };
 
+  // Same item for your posts ("Add to your story") and others' ("Share to your story")
+  const storyItem = (label: string) => (
+    <SheetItem
+      label={
+        pending && status !== "confirm-delete"
+          ? "Adding…"
+          : status === "story-added"
+            ? "Added to your story ✓"
+            : status === "story-failed"
+              ? "Couldn't add it, try again"
+              : label
+      }
+      icon={PlusCircle}
+      onClick={shareToStory}
+      disabled={pending || status === "story-added"}
+    />
+  );
+
   return (
     <>
       <button
@@ -61,20 +79,7 @@ export function PostMenu({ post, meId }: { post: Post; meId: string }) {
       <Sheet title={post.author?.username ?? "Post"} open={open} onClose={close}>
         {isMine ? (
           <>
-            <SheetItem
-              label={
-                pending && status !== "confirm-delete"
-                  ? "Adding…"
-                  : status === "story-added"
-                    ? "Added to your story ✓"
-                    : status === "story-failed"
-                      ? "Couldn't add it, try again"
-                      : "Add to your story"
-              }
-              icon={PlusCircle}
-              onClick={shareToStory}
-              disabled={pending || status === "story-added"}
-            />
+            {storyItem("Add to your story")}
             <SheetItem
               label={
                 pending && status === "confirm-delete"
@@ -91,6 +96,8 @@ export function PostMenu({ post, meId }: { post: Post; meId: string }) {
           </>
         ) : (
           <>
+            {/* Anyone's post can go on your story; the viewer credits the original poster */}
+            {storyItem("Share to your story")}
             <SheetItem label={status === "copied" ? "Link copied ✓" : "Copy link"} icon={Link2} onClick={copyLink} />
             {post.author && (
               <SheetItem

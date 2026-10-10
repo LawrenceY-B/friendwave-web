@@ -4,6 +4,7 @@ import { auth0 } from "@/lib/auth0";
 import { House, LogOut, type LucideIcon, MessageCircle, Search, SquarePlus } from "lucide-react";
 import Link from "next/link";
 import { Avatar } from "./avatar";
+import { BottomNav } from "./bottom-nav";
 
 // Reads the session, so it must render inside <Suspense> (see layout.tsx)
 export async function UserMenu() {
@@ -37,10 +38,13 @@ export async function UserMenu() {
   // Icons only; each has a tooltip (title) and a name for screen readers (aria-label)
   return (
     <nav className="flex items-center gap-1 sm:gap-2">
-      <NavIcon href="/" label="Feed" icon={House} />
-      <NavIcon href="/search" label="Search people" icon={Search} />
-      <NavIcon href="/create" label="New post" icon={SquarePlus} />
-      <NavIcon href="/chats" label="Chats" icon={MessageCircle} />
+      {/* On phones these move to the bottom bar (bottom-nav.tsx) */}
+      <div className="hidden items-center gap-2 sm:flex">
+        <NavIcon href="/" label="Feed" icon={House} />
+        <NavIcon href="/search" label="Search people" icon={Search} />
+        <NavIcon href="/create" label="New post" icon={SquarePlus} />
+        <NavIcon href="/chats" label="Chats" icon={MessageCircle} />
+      </div>
       <Link href={`/users/${me.id}`} aria-label="Your profile" title="Your profile" className="ml-1 rounded-full p-1">
         <Avatar user={me} size="sm" />
       </Link>
@@ -76,4 +80,11 @@ async function loadMe() {
     if (error instanceof ApiError && error.status === 503) return null;
     throw error;
   }
+}
+
+// The phone bottom bar, only for logged-in users. Rendered outside the header:
+// the header's backdrop-blur would otherwise pin a `fixed` child to the header.
+export async function MobileNav() {
+  const session = await auth0.getSession();
+  return session ? <BottomNav /> : null;
 }

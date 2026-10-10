@@ -85,6 +85,11 @@ src/
   story, Delete post with a second tap to confirm; others: Copy link, Go to profile), and "Following ▾" on a profile
   (Unfollow; Close Friends, Favourites, Mute and Restrict are marked *Coming soon*).
 - **Photos:** swipe, or use ‹ ›, with dots showing which photo you're on (`components/post-images.tsx`).
+- **Phones get a bottom tab bar** (`components/bottom-nav.tsx`): Feed, Search, New post and Chats in a floating
+  "liquid glass" pill (translucent, blurs and tints from what scrolls behind it; a glass lens marks the current tab).
+  It goes solid if "Reduce transparency" is on, and hides inside a conversation and in the story viewer. From `sm:` up
+  these icons stay in the header.
+- **Share anyone's post to your story** from its ⋮ menu; the story viewer credits the original poster ("from @bob").
 - **Less text:** likes and comments are just numbers next to icons (screen readers still hear "3 likes"); the header is
   icons only (each has a tooltip and a screen-reader name).
 - **Profile:** a story ring on the picture when they have a live story, tappable follower/following counts that

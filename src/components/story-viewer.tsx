@@ -74,6 +74,7 @@ export function StoryViewer({ groups: initialGroups, startIndex, meId }: Props) 
 
   if (!group || !story) return null;
   const isMine = group.author.id === meId;
+  const originalAuthor = story.post.author && story.post.author.id !== group.author.id ? story.post.author : null;
   const image = story.post.images[0];
 
   // A tap moves; a press-and-hold only pauses
@@ -141,12 +142,26 @@ export function StoryViewer({ groups: initialGroups, startIndex, meId }: Props) 
 
         <header className="absolute inset-x-0 top-3 z-10 flex items-center gap-2 px-3 pt-2 text-white">
           <Avatar user={group.author} size="sm" />
-          <Link href={`/users/${group.author.id}`} className="text-sm font-semibold hover:underline">
-            {group.author.username}
-          </Link>
-          <time dateTime={story.createdAt} className="text-xs text-white/70">
-            {timeAgo(story.createdAt)}
-          </time>
+          <div className="flex min-w-0 flex-col">
+            <span className="flex items-center gap-2">
+              <Link href={`/users/${group.author.id}`} className="text-sm font-semibold hover:underline">
+                {group.author.username}
+              </Link>
+              <time dateTime={story.createdAt} className="text-xs text-white/70">
+                {timeAgo(story.createdAt)}
+              </time>
+            </span>
+            {/* A shared post: credit whoever originally posted it */}
+            {originalAuthor && (
+              <Link
+                href={`/users/${originalAuthor.id}`}
+                className="truncate text-xs text-white/80 hover:underline"
+                data-testid="story-credit"
+              >
+                from @{originalAuthor.username}
+              </Link>
+            )}
+          </div>
           <div className="ml-auto flex items-center gap-1">
             {isMine && (
               <button
