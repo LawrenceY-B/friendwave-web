@@ -47,7 +47,7 @@ async function Home({ searchParams }: { searchParams: PageProps<"/">["searchPara
           )}
         </p>
       ) : (
-        items.map((post) => <PostCard key={post.id} post={post} />)
+        items.map((post) => <PostCard key={post.id} post={post} meId={me.id} />)
       )}
       {nextCursor && (
         <Link
@@ -67,12 +67,14 @@ function Landing() {
       <h1 className="text-4xl font-bold tracking-tight">Friendwave</h1>
       <p className="max-w-sm text-neutral-600 dark:text-neutral-400">Connect with friends and share moments.</p>
       <div className="flex gap-3">
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- Auth0 routes (proxy.ts) need a full page load */}
         <a
           href="/auth/login"
           className="rounded-full bg-neutral-900 px-5 py-2 font-medium text-white dark:bg-white dark:text-neutral-900"
         >
           Log in
         </a>
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- Auth0 routes (proxy.ts) need a full page load */}
         <a
           href="/auth/login?screen_hint=signup"
           className="rounded-full border border-neutral-300 px-5 py-2 font-medium dark:border-neutral-700"

@@ -20,7 +20,8 @@ export const metadata: Metadata = {
   description: "Connect with friends and share moments.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+// `modal` is the slot app/@modal renders into: a post opened on top of the current page
+export default function RootLayout({ children, modal }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col bg-neutral-50 dark:bg-black">
@@ -38,6 +39,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           </div>
         </header>
         <main className="mx-auto w-full max-w-xl flex-1 px-4 py-6">{children}</main>
+        {modal}
       </body>
     </html>
   );

@@ -1,6 +1,6 @@
 "use server";
 
-import type { Chat, Comment, Message, Post, Profile } from "@/interfaces/api";
+import type { Chat, Comment, Message, Post, Profile, UserSummary } from "@/interfaces/api";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { api, ApiError, apiPage } from "./api";
@@ -77,15 +77,16 @@ export async function createPost(_prev: CreatePostState, formData: FormData): Pr
   images.forEach((image) => body.append("images", image, image.name));
   body.append("caption", caption);
 
-  let post: Post;
   try {
-    post = await api<Post>("/api/posts", { method: "POST", body });
+    await api<Post>("/api/posts", { method: "POST", body });
   } catch (error) {
     if (error instanceof ApiError && error.status < 500) return { error: error.message };
     throw error;
   }
   revalidatePath("/");
-  redirect(`/posts/${post.id}`);
+  // Back to the feed, where the new post is first (like Instagram). Redirecting to
+  // /posts/:id would open it as an overlay on top of the empty create form.
+  redirect("/");
 }
 
 export async function deletePost(postId: string) {
@@ -190,4 +191,12 @@ export async function deleteStory(storyId: string) {
   if (!isId(storyId)) throw new Error("Invalid story id");
   await api(`/api/stories/${storyId}`, { method: "DELETE" });
   revalidatePath("/");
+}
+
+// ---- profile lists ----
+
+// Followers or following of a user (first 50), for the sheets on a profile
+export async function listPeople(userId: string, which: "followers" | "following") {
+  if (!isId(userId) || (which !== "followers" && which !== "following")) throw new Error("Invalid request");
+  return (await apiPage<UserSummary>(`/api/users/${userId}/${which}?limit=50`)).items;
 }

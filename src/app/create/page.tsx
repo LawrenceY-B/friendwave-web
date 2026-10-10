@@ -19,6 +19,6 @@ export default function NewPostPage() {
 // Sends logged-out visitors to log in, then back here
 async function RequireLogin({ children }: { children: React.ReactNode }) {
   const session = await auth0.getSession();
-  if (!session) redirect("/auth/login?returnTo=/posts/new");
+  if (!session) redirect("/auth/login?returnTo=/create");
   return children;
 }

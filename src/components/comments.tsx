@@ -3,7 +3,7 @@
 import type { Comment } from "@/interfaces/api";
 import { addComment, addReply, loadComments, removeComment, removeReply } from "@/lib/actions";
 import { timeAgo } from "@/lib/format";
-import { Trash2 } from "lucide-react";
+import { SendHorizontal, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { type FormEvent, useState, useTransition } from "react";
 import { Avatar } from "./avatar";
@@ -79,22 +79,17 @@ export function Comments({ postId, postAuthorId, meId, comments, nextCursor }: P
 
   return (
     <section aria-label="Comments" className="space-y-4">
-      <form onSubmit={submitComment} className="flex gap-2">
+      {/* Enter or the send icon posts the comment */}
+      <form onSubmit={submitComment} className="relative">
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
           maxLength={500}
           placeholder="Add a comment…"
           aria-label="Add a comment"
-          className="flex-1 rounded-full border border-neutral-300 bg-transparent px-4 py-2 text-sm outline-none focus:border-blue-500 dark:border-neutral-700"
+          className="w-full rounded-full border border-neutral-300 bg-transparent py-2 pr-11 pl-4 text-sm outline-none focus:border-blue-500 dark:border-neutral-700"
         />
-        <button
-          type="submit"
-          disabled={pending || !text.trim()}
-          className="rounded-full px-3 text-sm font-semibold text-blue-600 disabled:opacity-40"
-        >
-          Post
-        </button>
+        <SendIcon label="Post comment" disabled={pending || !text.trim()} />
       </form>
 
       {error && (
@@ -158,7 +153,7 @@ export function Comments({ postId, postAuthorId, meId, comments, nextCursor }: P
               )}
 
               {replyingTo === comment.id && (
-                <form onSubmit={(e) => submitReply(e, comment.id)} className="ml-11 flex gap-2">
+                <form onSubmit={(e) => submitReply(e, comment.id)} className="relative ml-11">
                   <input
                     autoFocus
                     value={replyText}
@@ -166,15 +161,9 @@ export function Comments({ postId, postAuthorId, meId, comments, nextCursor }: P
                     maxLength={500}
                     placeholder={`Reply to ${comment.author?.username ?? "comment"}…`}
                     aria-label="Write a reply"
-                    className="flex-1 rounded-full border border-neutral-300 bg-transparent px-3 py-1.5 text-sm outline-none focus:border-blue-500 dark:border-neutral-700"
+                    className="w-full rounded-full border border-neutral-300 bg-transparent py-1.5 pr-10 pl-3 text-sm outline-none focus:border-blue-500 dark:border-neutral-700"
                   />
-                  <button
-                    type="submit"
-                    disabled={pending || !replyText.trim()}
-                    className="text-sm font-semibold text-blue-600 disabled:opacity-40"
-                  >
-                    Reply
-                  </button>
+                  <SendIcon label="Send reply" disabled={pending || !replyText.trim()} />
                 </form>
               )}
             </li>
@@ -198,6 +187,20 @@ function AuthorLink({ comment }: { comment: { author: Comment["author"] } }) {
     </Link>
   ) : (
     <span className="text-neutral-500">Deleted user</span>
+  );
+}
+
+// The send button sitting inside the right end of an input
+function SendIcon({ label, disabled }: { label: string; disabled: boolean }) {
+  return (
+    <button
+      type="submit"
+      disabled={disabled}
+      aria-label={label}
+      className="absolute top-1/2 right-1.5 -translate-y-1/2 rounded-full p-1.5 text-blue-600 disabled:text-neutral-400"
+    >
+      <SendHorizontal className="size-4" />
+    </button>
   );
 }
 

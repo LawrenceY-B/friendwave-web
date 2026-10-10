@@ -26,15 +26,20 @@ export function LikeButton({ postId, initial }: { postId: string; initial: LikeS
   };
 
   return (
-    <button
-      type="button"
-      onClick={toggle}
-      aria-pressed={optimistic.liked}
-      aria-label={optimistic.liked ? "Unlike" : "Like"}
-      className="flex items-center gap-1.5 text-sm"
-    >
-      <Heart className={optimistic.liked ? "size-5 fill-red-500 text-red-500" : "size-5"} />
-      {plural(optimistic.likeCount, "like")}
-    </button>
+    <span className="flex items-center gap-1.5 text-sm">
+      <button
+        type="button"
+        onClick={toggle}
+        aria-pressed={optimistic.liked}
+        aria-label={optimistic.liked ? "Unlike" : "Like"}
+      >
+        <Heart className={optimistic.liked ? "size-6 fill-red-500 text-red-500" : "size-6"} />
+      </button>
+      {/* Just the number on screen; screen readers hear "3 likes" */}
+      <span data-testid="like-count">
+        {optimistic.likeCount.toLocaleString("en")}
+        <span className="sr-only">{plural(optimistic.likeCount, "like").replace(/^[\d,]+/, "")}</span>
+      </span>
+    </span>
   );
 }

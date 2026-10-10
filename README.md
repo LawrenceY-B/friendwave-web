@@ -47,7 +47,7 @@ Browser ──▶ Next.js server ──(Bearer access token)──▶ Friendwave
 
 ```
 src/
-  app/            pages: / (landing or feed), /posts/new, /posts/[id], /users/[id], /settings/profile, /chats, /chats/[id], error + not-found
+  app/            pages: / (landing or feed), /create, /posts/[id] (+ @modal overlay), /users/[id], /settings/profile, /chats, /chats/[id], error + not-found
   components/     avatar, post card, new-post form, edit-profile form, comments, like/follow buttons, chat room, user menu, skeletons
   interfaces/     API types (aliases over the generated file)
   lib/            auth0 client, API helper, server actions, socket, upload limits, formatting
@@ -63,6 +63,8 @@ src/
 | `pnpm format` | Prettier (sorts imports and Tailwind classes) |
 | `pnpm gen:api` | regenerate API types |
 
+`NEXT_DIST_DIR=.next-test pnpm build` builds a separate copy (used by tests, so they never touch `.next`).
+
 ## Live chat (`src/components/chat-room.tsx`)
 
 - The page loads the chat and its latest 30 messages on the server, then the browser keeps them live.
@@ -73,16 +75,32 @@ src/
 - **Reconnects:** after a drop, it fetches the latest page to catch up on anything missed.
 - Delete your own messages (hover). Edits and deletes made elsewhere show up live.
 
+## Look and feel (Instagram-style)
+
+- **Posts open on top of the page you're on** (`app/@modal/(.)posts/[id]`, Next.js intercepting +
+  parallel routes). The URL changes, so a post can be shared; ✕, Esc, clicking outside or Back closes it.
+  Opening `/posts/:id` directly (a shared link or a refresh) shows the full page, with a back button.
+- **Menus are sheets** (`components/sheet.tsx`, a native `<dialog>`): they slide up from the bottom on phones
+  (swipe down to close) and appear centred on larger screens. Examples: the ⋮ on a post (your posts: Add to your
+  story, Delete post with a second tap to confirm; others: Copy link, Go to profile), and "Following ▾" on a profile
+  (Unfollow; Close Friends, Favourites, Mute and Restrict are marked *Coming soon*).
+- **Photos:** swipe, or use ‹ ›, with dots showing which photo you're on (`components/post-images.tsx`).
+- **Less text:** likes and comments are just numbers next to icons (screen readers still hear "3 likes"); the header is
+  icons only (each has a tooltip and a screen-reader name).
+- **Profile:** a story ring on the picture when they have a live story, tappable follower/following counts that
+  open lists, and a Following ▾ / Message button row.
+
 ## Posting and comments
 
-- **`/posts/new`** (the ＋ in the header): pick up to 10 photos (5 MB each), with previews and remove buttons,
+- **`/create`** (the ＋ in the header; not under /posts/, where it would clash with the post overlay route): pick up to 10 photos (5 MB each), with previews and remove buttons,
   plus a caption. Wrong types and oversized files are skipped with a message before anything uploads.
   The form uses `useActionState` with the `createPost` Server Action, which forwards the photos to the API
-  and opens the new post.
+  and returns you to the feed, where the new post is first.
 - **Upload size:** `next.config.ts` raises two limits to 52 MB. Server Actions accept 1 MB by default,
   and `proxy.ts` buffers only 10 MB of a request body by default. **The proxy limit cuts larger bodies off
   silently**, which would corrupt bigger uploads.
-- **`/posts/[id]`**: the post, comments (newest first, "Load older comments"), replies, and deleting.
+- **Comments** (in the post overlay or page): newest first, "Load older comments", replies, and deleting. The send icon
+  sits inside the input; Enter does the same.
   Delete buttons show only where the API allows it: your own comments and replies, every comment on your
   own posts, and replies on your own comments. Each change is a Server Action that re-renders the page in
   the same round trip.

@@ -1,56 +1,25 @@
-import { AddToStoryButton } from "@/components/add-to-story-button";
-import { Comments } from "@/components/comments";
-import { DeletePostButton } from "@/components/delete-post-button";
-import { PostCard } from "@/components/post-card";
+import { BackButton } from "@/components/back-button";
+import { PostDetail } from "@/components/post-detail";
 import { PostSkeleton } from "@/components/post-skeleton";
-import type { Comment, Post, Profile } from "@/interfaces/api";
-import { api, ApiError, apiPage } from "@/lib/api";
-import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
+// A post opened directly (shared link, refresh). Opened from inside the app, the
+// same post shows as an overlay instead: see app/@modal/(.)posts/[id].
 export default function PostPage({ params }: PageProps<"/posts/[id]">) {
   return (
-    <Suspense fallback={<PostSkeleton />}>
-      <PostView params={params} />
-    </Suspense>
-  );
-}
-
-async function PostView({ params }: { params: PageProps<"/posts/[id]">["params"] }) {
-  const { id } = await params;
-  if (!/^[0-9a-f]{24}$/.test(id)) notFound();
-  const [me, post, comments] = await loadPost(id);
-  const isMine = post.author?.id === me.id;
-
-  return (
-    <div className="space-y-6">
-      <PostCard post={post} />
-      {isMine && (
-        <div className="flex gap-6">
-          <AddToStoryButton postId={post.id} />
-          <DeletePostButton postId={post.id} />
-        </div>
-      )}
-      <Comments
-        postId={post.id}
-        postAuthorId={post.author?.id ?? null}
-        meId={me.id}
-        comments={comments.items}
-        nextCursor={comments.nextCursor}
-      />
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <BackButton />
+        <h1 className="font-semibold">Post</h1>
+      </div>
+      <Suspense fallback={<PostSkeleton />}>
+        <Post params={params} />
+      </Suspense>
     </div>
   );
 }
 
-async function loadPost(id: string) {
-  try {
-    return await Promise.all([
-      api<Profile>("/api/users/me"),
-      api<Post>(`/api/posts/${id}`),
-      apiPage<Comment>(`/api/posts/${id}/comments?limit=20`),
-    ]);
-  } catch (error) {
-    if (error instanceof ApiError && error.status === 404) notFound();
-    throw error;
-  }
+async function Post({ params }: { params: PageProps<"/posts/[id]">["params"] }) {
+  const { id } = await params;
+  return <PostDetail id={id} variant="page" />;
 }

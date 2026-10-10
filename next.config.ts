@@ -4,6 +4,8 @@ import type { NextConfig } from "next";
 const UPLOAD_LIMIT = "52mb";
 
 const nextConfig: NextConfig = {
+  // Lets tests build a separate copy (e.g. NEXT_DIST_DIR=.next-test) without touching .next
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   experimental: {
     // Server Actions accept 1 MB by default
     serverActions: { bodySizeLimit: UPLOAD_LIMIT },

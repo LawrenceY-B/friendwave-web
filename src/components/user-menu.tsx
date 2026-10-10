@@ -1,7 +1,7 @@
 import type { Profile } from "@/interfaces/api";
 import { api, ApiError } from "@/lib/api";
 import { auth0 } from "@/lib/auth0";
-import { Search, SquarePlus } from "lucide-react";
+import { House, LogOut, type LucideIcon, MessageCircle, Search, SquarePlus } from "lucide-react";
 import Link from "next/link";
 import { Avatar } from "./avatar";
 
@@ -11,6 +11,7 @@ export async function UserMenu() {
   if (!session) {
     return (
       // Auth routes need a full page load, so <a>, not <Link>
+      // eslint-disable-next-line @next/next/no-html-link-for-pages -- Auth0 routes (proxy.ts) need a full page load
       <a
         href="/auth/login"
         className="rounded-full bg-neutral-900 px-4 py-1.5 text-sm font-medium text-white dark:bg-white dark:text-neutral-900"
@@ -28,43 +29,43 @@ export async function UserMenu() {
         <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
           API offline
         </span>
-        <a href="/auth/logout" className="text-neutral-500 hover:underline">
-          Log out
-        </a>
+        <LogoutLink />
       </nav>
     );
   }
 
+  // Icons only; each has a tooltip (title) and a name for screen readers (aria-label)
   return (
-    <nav className="flex items-center gap-4 text-sm">
-      <Link href="/" className="hover:underline">
-        Feed
-      </Link>
-      <Link href="/chats" className="hover:underline">
-        Chats
-      </Link>
-      <Link
-        href="/search"
-        aria-label="Search people"
-        className="rounded-full p-1 hover:bg-neutral-100 dark:hover:bg-neutral-900"
-      >
-        <Search className="size-5" />
-      </Link>
-      <Link
-        href="/posts/new"
-        aria-label="New post"
-        className="rounded-full p-1 hover:bg-neutral-100 dark:hover:bg-neutral-900"
-      >
-        <SquarePlus className="size-5" />
-      </Link>
-      <Link href={`/users/${me.id}`} className="flex items-center gap-2 hover:underline">
+    <nav className="flex items-center gap-1 sm:gap-2">
+      <NavIcon href="/" label="Feed" icon={House} />
+      <NavIcon href="/search" label="Search people" icon={Search} />
+      <NavIcon href="/create" label="New post" icon={SquarePlus} />
+      <NavIcon href="/chats" label="Chats" icon={MessageCircle} />
+      <Link href={`/users/${me.id}`} aria-label="Your profile" title="Your profile" className="ml-1 rounded-full p-1">
         <Avatar user={me} size="sm" />
-        <span className="hidden sm:inline">{me.username}</span>
       </Link>
-      <a href="/auth/logout" className="text-neutral-500 hover:underline">
-        Log out
-      </a>
+      <LogoutLink />
     </nav>
+  );
+}
+
+const iconClass = "rounded-full p-2 hover:bg-neutral-100 dark:hover:bg-neutral-900";
+
+function NavIcon({ href, label, icon: Icon }: { href: string; label: string; icon: LucideIcon }) {
+  return (
+    <Link href={href} aria-label={label} title={label} className={iconClass}>
+      <Icon className="size-5" />
+    </Link>
+  );
+}
+
+// Auth routes need a full page load, so <a>, not <Link>
+function LogoutLink() {
+  return (
+    // eslint-disable-next-line @next/next/no-html-link-for-pages -- Auth0 routes (proxy.ts) need a full page load
+    <a href="/auth/logout" aria-label="Log out" title="Log out" className={`${iconClass} text-neutral-500`}>
+      <LogOut className="size-5" />
+    </a>
   );
 }
 
