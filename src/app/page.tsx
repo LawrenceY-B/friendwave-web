@@ -1,7 +1,8 @@
 import { PostCard } from "@/components/post-card";
 import { PostSkeleton } from "@/components/post-skeleton";
-import type { Post } from "@/interfaces/api";
-import { apiPage } from "@/lib/api";
+import { StoriesBar } from "@/components/stories-bar";
+import type { Post, Profile, StoryGroup } from "@/interfaces/api";
+import { api, apiPage } from "@/lib/api";
 import { auth0 } from "@/lib/auth0";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -21,21 +22,33 @@ async function Home({ searchParams }: { searchParams: PageProps<"/">["searchPara
 
   const { cursor } = await searchParams;
   const query = typeof cursor === "string" && /^[0-9a-f]{24}$/.test(cursor) ? `?cursor=${cursor}` : "";
-  const { items, nextCursor } = await apiPage<Post>(`/api/feed${query}`);
-
-  if (items.length === 0) {
-    return (
-      <p className="py-20 text-center text-neutral-500">
-        {query ? "No more posts." : "Your feed is empty. Follow people to see their posts here."}
-      </p>
-    );
-  }
+  // Stories only on the first page of the feed; all requests run in parallel
+  const [{ items, nextCursor }, stories, me] = await Promise.all([
+    apiPage<Post>(`/api/feed${query}`),
+    query ? null : api<StoryGroup[]>("/api/stories"),
+    api<Profile>("/api/users/me"),
+  ]);
 
   return (
     <div className="space-y-6">
-      {items.map((post) => (
-        <PostCard key={post.id} post={post} />
-      ))}
+      {stories && <StoriesBar groups={stories} meId={me.id} />}
+      {items.length === 0 ? (
+        <p className="py-20 text-center text-neutral-500">
+          {query ? (
+            "No more posts."
+          ) : (
+            <>
+              Your feed is empty.{" "}
+              <Link href="/search" className="text-blue-600 hover:underline">
+                Find people to follow
+              </Link>
+              .
+            </>
+          )}
+        </p>
+      ) : (
+        items.map((post) => <PostCard key={post.id} post={post} />)
+      )}
       {nextCursor && (
         <Link
           href={`/?cursor=${nextCursor}`}

@@ -1,7 +1,7 @@
 import type { Profile } from "@/interfaces/api";
 import { api, ApiError } from "@/lib/api";
 import { auth0 } from "@/lib/auth0";
-import { SquarePlus } from "lucide-react";
+import { Search, SquarePlus } from "lucide-react";
 import Link from "next/link";
 import { Avatar } from "./avatar";
 
@@ -42,6 +42,13 @@ export async function UserMenu() {
       </Link>
       <Link href="/chats" className="hover:underline">
         Chats
+      </Link>
+      <Link
+        href="/search"
+        aria-label="Search people"
+        className="rounded-full p-1 hover:bg-neutral-100 dark:hover:bg-neutral-900"
+      >
+        <Search className="size-5" />
       </Link>
       <Link
         href="/posts/new"

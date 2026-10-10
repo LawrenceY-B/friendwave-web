@@ -13,3 +13,4 @@ export type Story = Schemas["Story"];
 export type StoryGroup = Schemas["StoryGroup"];
 export type Chat = Schemas["Chat"];
 export type Message = Schemas["Message"];
+export type UserSearchResult = Schemas["UserSearchResult"];

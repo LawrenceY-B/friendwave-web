@@ -94,6 +94,12 @@ changed fields are sent, and Save stays disabled until something changes. Userna
 browser (3-30 letters, numbers, `.` or `_`) and by the API, which answers "Username already taken"
 (ignoring case). After saving, the whole layout is revalidated, so the header's picture and name update too.
 
-## Next up
+## Search and stories
 
-Stories. The API already supports them.
+- **`/search`** (magnifier in the header): results as you type, with Follow / Following on each person.
+- **Stories:** a bar at the top of the feed (yours first, then people you follow). The full-screen viewer
+  auto-advances every 5s; tap the left/right, or use ←/→, to move; hold to pause; Esc to close. Rings turn
+  grey once seen (remembered in this browser). "Add to your story" is on your posts; delete from the viewer.
+- **Pages are kept alive:** Next.js keeps visited pages alive in the background (React `<Activity>`), so
+  components that must start fresh reset themselves when hidden: the story viewer, the new-post form after
+  a successful post, and the chat room (which catches up on missed messages when it reconnects).

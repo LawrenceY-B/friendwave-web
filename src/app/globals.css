@@ -25,3 +25,13 @@
     color: var(--foreground);
   }
 }
+
+/* Story progress bar (components/story-viewer.tsx) */
+@keyframes story-progress {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}

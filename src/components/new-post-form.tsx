@@ -3,13 +3,30 @@
 import { createPost } from "@/lib/actions";
 import { MAX_CAPTION, MAX_IMAGE_BYTES, MAX_IMAGES } from "@/lib/limits";
 import { ImagePlus, X } from "lucide-react";
-import { useActionState, useEffect, useMemo, useState } from "react";
+import { useActionState, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 export function NewPostForm() {
   const [state, formAction, pending] = useActionState(createPost, {});
   const [files, setFiles] = useState<File[]>([]);
   const [caption, setCaption] = useState("");
   const [pickError, setPickError] = useState<string | null>(null);
+
+  // Next.js keeps this page alive after you leave it. After a successful post, coming
+  // back should show an empty form (not the old photos, inviting a double post).
+  // A successful submit redirects away; a failed one returns an error and keeps the draft.
+  const submitted = useRef(false);
+  useEffect(() => {
+    submitted.current = false; // an error came back: keep the draft
+  }, [state]);
+  useLayoutEffect(() => {
+    return () => {
+      if (!submitted.current) return;
+      submitted.current = false;
+      setFiles([]);
+      setCaption("");
+      setPickError(null);
+    };
+  }, []);
 
   // Preview URLs for the chosen files, released when no longer shown
   const previews = useMemo(() => files.map((file) => URL.createObjectURL(file)), [files]);
@@ -33,6 +50,7 @@ export function NewPostForm() {
   function submit(formData: FormData) {
     formData.delete("images");
     files.forEach((file) => formData.append("images", file, file.name));
+    submitted.current = true;
     formAction(formData);
   }
 

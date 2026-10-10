@@ -1,3 +1,4 @@
+import { AddToStoryButton } from "@/components/add-to-story-button";
 import { Comments } from "@/components/comments";
 import { DeletePostButton } from "@/components/delete-post-button";
 import { PostCard } from "@/components/post-card";
@@ -24,7 +25,12 @@ async function PostView({ params }: { params: PageProps<"/posts/[id]">["params"]
   return (
     <div className="space-y-6">
       <PostCard post={post} />
-      {isMine && <DeletePostButton postId={post.id} />}
+      {isMine && (
+        <div className="flex gap-6">
+          <AddToStoryButton postId={post.id} />
+          <DeletePostButton postId={post.id} />
+        </div>
+      )}
       <Comments
         postId={post.id}
         postAuthorId={post.author?.id ?? null}

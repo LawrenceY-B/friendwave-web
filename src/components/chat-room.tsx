@@ -40,26 +40,25 @@ export function ChatRoom({ chat, meId, initialMessages, initialCursor }: Props) 
   const socketRef = useRef<Socket | null>(null);
   const bottomRef = useRef<HTMLLIElement>(null);
   const lastIdRef = useRef<string | undefined>(undefined);
+  const connectedBefore = useRef(false);
   const other = chat.participants[0] ?? null;
 
   // ---- live connection ----
   useEffect(() => {
     const socket = connectSocket();
     socketRef.current = socket;
-    let wasOffline = false;
-
     socket.on("connect", async () => {
       setStatus("live");
-      if (wasOffline) {
-        // Catch up on anything sent while we were disconnected
+      // Catch up on anything sent while we weren't connected: after a dropped
+      // connection, or after coming back to this page (Next.js keeps it alive in
+      // the background, but its socket is closed while hidden)
+      if (connectedBefore.current) {
         const latest = await loadMessages(chat.id).catch(() => null);
         if (latest) setMessages((prev) => latest.items.reduce(upsert, prev));
       }
+      connectedBefore.current = true;
     });
-    const goOffline = () => {
-      wasOffline = true;
-      setStatus("offline");
-    };
+    const goOffline = () => setStatus("offline");
     socket.on("disconnect", goOffline);
     socket.on("connect_error", goOffline);
 

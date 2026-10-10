@@ -191,7 +191,7 @@ export interface paths {
             "application/json": {
               /** @constant */
               success: true;
-              data: components["schemas"]["UserSummary"][];
+              data: components["schemas"]["UserSearchResult"][];
               nextCursor: string | null;
             };
           };
@@ -2484,6 +2484,10 @@ export interface components {
       username: string;
       name: string;
       avatarUrl: string | null;
+    };
+    UserSearchResult: components["schemas"]["UserSummary"] & {
+      isMe: boolean;
+      isFollowing: boolean;
     };
     Profile: components["schemas"]["UserSummary"] & {
       bio: string;

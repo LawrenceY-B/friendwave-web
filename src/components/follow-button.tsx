@@ -1,17 +1,21 @@
 "use client";
 
 import { setFollowing } from "@/lib/actions";
-import { useOptimistic, useTransition } from "react";
+import { useOptimistic, useState, useTransition } from "react";
 
-// The action revalidates the profile, so the follower count on the page updates too
+// Flips instantly (optimistic), then keeps what the server confirmed. Keeping the
+// confirmed value locally matters on pages the action doesn't re-render (e.g. search
+// results): useOptimistic alone falls back to the original prop once the request ends.
 export function FollowButton({ userId, isFollowing }: { userId: string; isFollowing: boolean }) {
-  const [following, setOptimistic] = useOptimistic(isFollowing);
+  const [confirmed, setConfirmed] = useState(isFollowing);
+  const [following, setOptimistic] = useOptimistic(confirmed);
   const [pending, startTransition] = useTransition();
 
   const toggle = () =>
     startTransition(async () => {
       setOptimistic(!following);
-      await setFollowing(userId, !following);
+      const result = await setFollowing(userId, !following);
+      setConfirmed(result.following);
     });
 
   return (
@@ -19,6 +23,7 @@ export function FollowButton({ userId, isFollowing }: { userId: string; isFollow
       type="button"
       onClick={toggle}
       disabled={pending}
+      aria-pressed={following}
       className={
         following
           ? "rounded-lg border border-neutral-300 px-4 py-1.5 text-sm font-medium dark:border-neutral-700"

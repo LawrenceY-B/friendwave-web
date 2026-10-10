@@ -177,3 +177,17 @@ export async function updateProfile(_prev: UpdateProfileState, formData: FormDat
   revalidatePath("/", "layout");
   redirect(`/users/${me.id}`);
 }
+
+// ---- stories ----
+
+export async function addToStory(postId: string) {
+  if (!isId(postId)) throw new Error("Invalid post id");
+  await api("/api/stories", { method: "POST", body: JSON.stringify({ postId }) });
+  revalidatePath("/");
+}
+
+export async function deleteStory(storyId: string) {
+  if (!isId(storyId)) throw new Error("Invalid story id");
+  await api(`/api/stories/${storyId}`, { method: "DELETE" });
+  revalidatePath("/");
+}
