@@ -114,7 +114,7 @@ src/
 - **Reconnects:** after a drop, it fetches the latest page to catch up on anything missed.
 - Delete your own messages (hover). Edits and deletes made elsewhere show up live.
 - **Look (Telegram-style), full screen:**
-  - **Screen:** a blue → violet wallpaper with doodles (`.chat-wallpaper` in `globals.css`). Floating glass pills
+  - **Screen:** a blue → violet gradient wallpaper (`.chat-wallpaper` in `globals.css`). Floating glass pills
     sit on top: back, then name + status ("online", "last seen recently", or "Reconnecting…"), then their picture.
   - **Bubbles:**
     - yours on the right in light blue, theirs on the left in white

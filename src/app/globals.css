@@ -90,21 +90,12 @@
   background: conic-gradient(from var(--ring-angle), #fbbf24, #ec4899, #9333ea, #ec4899, #fbbf24);
 }
 
-/* The chat room's wallpaper (components/chat-room.tsx): a soft gradient with tiled doodles */
+/* The chat room's wallpaper (components/chat-room.tsx): a soft gradient */
 .chat-wallpaper {
-  background-color: #e0e7ff;
-  background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220' fill='none' stroke='rgb(79 70 229 / 0.13)' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E %3Cpath d='M28 34c-4-6-14-4-14 4 0 7 14 14 14 14s14-7 14-14c0-8-10-10-14-4z'/%3E %3Cpath d='M150 22l4 9 10 1-8 6 3 10-9-5-9 5 3-10-8-6 10-1z'/%3E %3Cpath d='M86 70h34a8 8 0 0 1 8 8v14a8 8 0 0 1-8 8h-20l-10 8v-8h-4a8 8 0 0 1-8-8V78a8 8 0 0 1 8-8z'/%3E %3Cpath d='M10 120c10-10 20 10 30 0s20 10 30 0'/%3E %3Ccircle cx='190' cy='96' r='12'/%3E%3Ccircle cx='190' cy='96' r='4'/%3E %3Cpath d='M150 150h40v28h-40zM160 150l4-6h12l4 6'/%3E%3Ccircle cx='170' cy='164' r='7'/%3E %3Cpath d='M44 176v-26l18-4v26'/%3E%3Ccircle cx='38' cy='176' r='6'/%3E%3Ccircle cx='56' cy='172' r='6'/%3E %3Cpath d='M100 196l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z'/%3E %3Cpath d='M200 200c-3-4-9-3-9 2 0 5 9 9 9 9s9-4 9-9c0-5-6-6-9-2z'/%3E %3Cpath d='M92 140a10 10 0 1 0 20 0a10 10 0 1 0-20 0M96 137h1M108 137h1M97 144c3 3 7 3 10 0'/%3E %3C/svg%3E"),
-    linear-gradient(160deg, #dbeafe 0%, #e0e7ff 45%, #ede9fe 100%);
-  background-size:
-    220px 220px,
-    100% 100%;
+  background: linear-gradient(160deg, #dbeafe 0%, #e0e7ff 45%, #ede9fe 100%);
 }
 @media (prefers-color-scheme: dark) {
   .chat-wallpaper {
-    background-color: #0f172a;
-    background-image:
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220' fill='none' stroke='rgb(255 255 255 / 0.06)' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E %3Cpath d='M28 34c-4-6-14-4-14 4 0 7 14 14 14 14s14-7 14-14c0-8-10-10-14-4z'/%3E %3Cpath d='M150 22l4 9 10 1-8 6 3 10-9-5-9 5 3-10-8-6 10-1z'/%3E %3Cpath d='M86 70h34a8 8 0 0 1 8 8v14a8 8 0 0 1-8 8h-20l-10 8v-8h-4a8 8 0 0 1-8-8V78a8 8 0 0 1 8-8z'/%3E %3Cpath d='M10 120c10-10 20 10 30 0s20 10 30 0'/%3E %3Ccircle cx='190' cy='96' r='12'/%3E%3Ccircle cx='190' cy='96' r='4'/%3E %3Cpath d='M150 150h40v28h-40zM160 150l4-6h12l4 6'/%3E%3Ccircle cx='170' cy='164' r='7'/%3E %3Cpath d='M44 176v-26l18-4v26'/%3E%3Ccircle cx='38' cy='176' r='6'/%3E%3Ccircle cx='56' cy='172' r='6'/%3E %3Cpath d='M100 196l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z'/%3E %3Cpath d='M200 200c-3-4-9-3-9 2 0 5 9 9 9 9s9-4 9-9c0-5-6-6-9-2z'/%3E %3Cpath d='M92 140a10 10 0 1 0 20 0a10 10 0 1 0-20 0M96 137h1M108 137h1M97 144c3 3 7 3 10 0'/%3E %3C/svg%3E"),
-      linear-gradient(160deg, #0b1224 0%, #1e1b4b 60%, #2e1065 100%);
+    background: linear-gradient(160deg, #0b1224 0%, #1e1b4b 60%, #2e1065 100%);
   }
 }
