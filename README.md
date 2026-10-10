@@ -74,7 +74,8 @@ src/
 - **Comments and replies** from others appear (and disappear) while a post is open, without duplicates.
 - **"↑ New posts"** shows on the feed when someone you follow posts; tap it to load them.
 - **Notifications** (`/notifications`, the bell in the header): follows, likes, comments, replies and story
-  shares. The red dot appears live; opening the page marks everything read.
+  shares. The red dot appears live; opening the page marks everything read. It shows the latest 10;
+  "See all" (then "See more") loads 10 more at a time.
 - **Online:** a green dot on the picture in the chat list and the chat header when the other person has the
   app open.
 

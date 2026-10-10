@@ -11,7 +11,7 @@ import { PostMenu } from "./post-menu";
 
 export function PostHeader({ post, meId }: { post: Post; meId: string }) {
   return (
-    <header className="flex items-center gap-3 p-3">
+    <header className="flex items-center gap-3 px-1 py-3">
       <Avatar user={post.author} size="sm" />
       {post.author ? (
         <Link href={`/users/${post.author.id}`} className="text-sm font-semibold hover:underline">
@@ -66,10 +66,13 @@ export function PostCaption({ post }: { post: Post }) {
 export function PostCard({ post, meId }: { post: Post; meId: string }) {
   return (
     <PostLive post={post}>
-      <article className="overflow-hidden rounded-xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950">
+      {/* Instagram-style: no card, just a thin line under each post */}
+      <article className="border-b border-neutral-200 pb-3 dark:border-neutral-800">
         <PostHeader post={post} meId={meId} />
-        <PostImages images={post.images} alt={post.caption || `Photo by ${post.author?.username ?? "unknown"}`} />
-        <div className="space-y-2 p-3">
+        <div className="overflow-hidden rounded-md">
+          <PostImages images={post.images} alt={post.caption || `Photo by ${post.author?.username ?? "unknown"}`} />
+        </div>
+        <div className="space-y-2 px-1 pt-3">
           <PostCounts post={post} />
           <PostCaption post={post} />
         </div>

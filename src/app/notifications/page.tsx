@@ -1,6 +1,7 @@
 import { NotificationList } from "@/components/notification-list";
 import type { Notification } from "@/interfaces/api";
 import { apiPage } from "@/lib/api";
+import { NOTIFICATIONS_PAGE } from "@/lib/limits";
 import { Suspense } from "react";
 
 export default function NotificationsPage() {
@@ -15,6 +16,6 @@ export default function NotificationsPage() {
 }
 
 async function Notifications() {
-  const { items } = await apiPage<Notification>("/api/notifications?limit=50");
-  return <NotificationList initial={items} />;
+  const { items, nextCursor } = await apiPage<Notification>(`/api/notifications?limit=${NOTIFICATIONS_PAGE}`);
+  return <NotificationList initial={items} nextCursor={nextCursor} />;
 }

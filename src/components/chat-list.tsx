@@ -23,7 +23,7 @@ export function ChatList({ chats: initialChats, meId }: { chats: Chat[]; meId: s
   });
 
   return (
-    <ul className="divide-y divide-neutral-200 overflow-hidden rounded-xl border border-neutral-200 bg-white dark:divide-neutral-800 dark:border-neutral-800 dark:bg-neutral-950">
+    <ul className="-mx-3">
       {chats.map((chat) => {
         const other = chat.participants[0] ?? null;
         const last = chat.lastMessage;
@@ -31,7 +31,7 @@ export function ChatList({ chats: initialChats, meId }: { chats: Chat[]; meId: s
           <li key={chat.id}>
             <Link
               href={`/chats/${chat.id}`}
-              className="flex items-center gap-3 p-3 hover:bg-neutral-50 dark:hover:bg-neutral-900"
+              className="flex items-center gap-3 rounded-xl p-3 hover:bg-neutral-100 dark:hover:bg-neutral-900"
             >
               <Avatar user={other} online={other ? presence[other.id] === true : false} />
               <div className="min-w-0 flex-1">
@@ -40,7 +40,7 @@ export function ChatList({ chats: initialChats, meId }: { chats: Chat[]; meId: s
                   {last ? `${last.senderId === meId ? "You: " : ""}${last.text}` : "No messages yet"}
                 </p>
               </div>
-              <time dateTime={chat.updatedAt} className="shrink-0 text-xs text-neutral-500">
+              <time suppressHydrationWarning dateTime={chat.updatedAt} className="shrink-0 text-xs text-neutral-500">
                 {timeAgo(chat.updatedAt)}
               </time>
             </Link>

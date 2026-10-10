@@ -200,7 +200,7 @@ export function StoryViewer({ groups: initialGroups, startIndex, meId }: Props) 
               <Link href={`/users/${group.author.id}`} className="text-sm font-semibold hover:underline">
                 {group.author.username}
               </Link>
-              <time dateTime={story.createdAt} className="text-xs text-white/70">
+              <time suppressHydrationWarning dateTime={story.createdAt} className="text-xs text-white/70">
                 {timeAgo(story.createdAt)}
               </time>
             </span>

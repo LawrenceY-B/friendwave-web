@@ -158,7 +158,7 @@ export function ChatRoom({ chat, meId, initialMessages, initialCursor }: Props) 
 
   // ---- view ----
   return (
-    <div className="flex h-[calc(100dvh-6.5rem)] flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950">
+    <div className="flex h-[calc(100dvh-6.5rem)] flex-col overflow-hidden">
       <header className="flex items-center gap-3 border-b border-neutral-200 p-3 dark:border-neutral-800">
         <Link
           href="/chats"

@@ -143,7 +143,9 @@ export function Comments({ postId, postAuthorId, meId, comments, nextCursor }: P
                     <AuthorLink comment={comment} /> <span className="whitespace-pre-wrap">{comment.text}</span>
                   </p>
                   <p className="mt-1 flex gap-3 text-xs text-neutral-500">
-                    <time dateTime={comment.createdAt}>{timeAgo(comment.createdAt)}</time>
+                    <time suppressHydrationWarning dateTime={comment.createdAt}>
+                      {timeAgo(comment.createdAt)}
+                    </time>
                     <button
                       type="button"
                       onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
@@ -167,7 +169,7 @@ export function Comments({ postId, postAuthorId, meId, comments, nextCursor }: P
                         <p>
                           <AuthorLink comment={reply} /> <span className="whitespace-pre-wrap">{reply.text}</span>
                         </p>
-                        <time dateTime={reply.createdAt} className="text-xs text-neutral-500">
+                        <time suppressHydrationWarning dateTime={reply.createdAt} className="text-xs text-neutral-500">
                           {timeAgo(reply.createdAt)}
                         </time>
                       </div>

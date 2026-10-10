@@ -25,7 +25,7 @@ export function Suggestions({
   return (
     <section aria-label={title} className="space-y-2">
       <h2 className="text-sm font-semibold text-neutral-500">{title}</h2>
-      <ul className="divide-y divide-neutral-200 overflow-hidden rounded-xl border border-neutral-200 bg-white dark:divide-neutral-800 dark:border-neutral-800 dark:bg-neutral-950">
+      <ul className="-mx-3">
         {suggestions.map((s) => (
           <li key={s.id} className="flex items-center gap-3 p-3">
             <Link href={`/users/${s.id}`} className="flex min-w-0 flex-1 items-center gap-3">
