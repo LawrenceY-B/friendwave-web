@@ -1,6 +1,7 @@
 import type { Profile } from "@/interfaces/api";
 import { api } from "@/lib/api";
 import { auth0 } from "@/lib/auth0";
+import { SquarePlus } from "lucide-react";
 import Link from "next/link";
 import { Avatar } from "./avatar";
 
@@ -27,6 +28,13 @@ export async function UserMenu() {
       </Link>
       <Link href="/chats" className="hover:underline">
         Chats
+      </Link>
+      <Link
+        href="/posts/new"
+        aria-label="New post"
+        className="rounded-full p-1 hover:bg-neutral-100 dark:hover:bg-neutral-900"
+      >
+        <SquarePlus className="size-5" />
       </Link>
       <Link href={`/users/${me.id}`} className="flex items-center gap-2 hover:underline">
         <Avatar user={me} size="sm" />

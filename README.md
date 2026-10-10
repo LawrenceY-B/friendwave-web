@@ -47,10 +47,10 @@ Browser ──▶ Next.js server ──(Bearer access token)──▶ Friendwave
 
 ```
 src/
-  app/            pages: / (landing or feed), /users/[id] (profile), /chats, /chats/[id], error + not-found
-  components/     avatar, post card, like/follow buttons, chat room, user menu, skeletons
+  app/            pages: / (landing or feed), /posts/new, /posts/[id], /users/[id], /chats, /chats/[id], error + not-found
+  components/     avatar, post card, new-post form, comments, like/follow buttons, chat room, user menu, skeletons
   interfaces/     API types (aliases over the generated file)
-  lib/            auth0 client, API helper, server actions, socket, formatting
+  lib/            auth0 client, API helper, server actions, socket, upload limits, formatting
   proxy.ts        Auth0 routes + session refresh
 ```
 
@@ -73,6 +73,20 @@ src/
 - **Reconnects:** after a drop, it fetches the latest page to catch up on anything missed.
 - Delete your own messages (hover). Edits and deletes made elsewhere show up live.
 
+## Posting and comments
+
+- **`/posts/new`** (the ＋ in the header): pick up to 10 photos (5 MB each), with previews and remove buttons,
+  plus a caption. Wrong types and oversized files are skipped with a message before anything uploads.
+  The form uses `useActionState` with the `createPost` Server Action, which forwards the photos to the API
+  and opens the new post.
+- **Upload size:** `next.config.ts` raises two limits to 52 MB. Server Actions accept 1 MB by default,
+  and `proxy.ts` buffers only 10 MB of a request body by default. **The proxy limit cuts larger bodies off
+  silently**, which would corrupt bigger uploads.
+- **`/posts/[id]`**: the post, comments (newest first, "Load older comments"), replies, and deleting.
+  Delete buttons show only where the API allows it: your own comments and replies, every comment on your
+  own posts, and replies on your own comments. Each change is a Server Action that re-renders the page in
+  the same round trip.
+
 ## Next up
 
-Comments, creating posts, stories, and profile editing. The API already supports all of them.
+Stories and profile editing. The API already supports both.

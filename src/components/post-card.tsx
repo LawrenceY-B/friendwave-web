@@ -18,9 +18,9 @@ export function PostCard({ post }: { post: Post }) {
         ) : (
           <span className="text-sm text-neutral-500">Deleted user</span>
         )}
-        <time dateTime={post.createdAt} className="ml-auto text-xs text-neutral-500">
-          {timeAgo(post.createdAt)}
-        </time>
+        <Link href={`/posts/${post.id}`} className="ml-auto text-xs text-neutral-500 hover:underline">
+          <time dateTime={post.createdAt}>{timeAgo(post.createdAt)}</time>
+        </Link>
       </header>
 
       {/* Swipe/scroll sideways through multiple images */}
@@ -41,10 +41,13 @@ export function PostCard({ post }: { post: Post }) {
       <div className="space-y-2 p-3">
         <div className="flex items-center gap-4">
           <LikeButton postId={post.id} initial={{ liked: post.likedByMe, likeCount: post.likeCount }} />
-          <span className="flex items-center gap-1.5 text-sm text-neutral-600 dark:text-neutral-400">
+          <Link
+            href={`/posts/${post.id}`}
+            className="flex items-center gap-1.5 text-sm text-neutral-600 hover:underline dark:text-neutral-400"
+          >
             <MessageCircle className="size-5" />
             {plural(post.commentCount, "comment")}
-          </span>
+          </Link>
           {post.images.length > 1 && (
             <span className="ml-auto text-xs text-neutral-500">{post.images.length} photos →</span>
           )}
