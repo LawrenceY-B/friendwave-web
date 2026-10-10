@@ -2,7 +2,7 @@ import { EditProfileForm } from "@/components/edit-profile-form";
 import { PageTitle } from "@/components/page-title";
 import type { Profile } from "@/interfaces/api";
 import { api } from "@/lib/api";
-import { auth0 } from "@/lib/auth0";
+import { getSession } from "@/lib/session";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
@@ -18,7 +18,7 @@ export default function EditProfilePage() {
 }
 
 async function EditProfile() {
-  const session = await auth0.getSession();
+  const session = await getSession();
   if (!session) redirect("/auth/login?returnTo=/settings/profile");
   const me = await api<Profile>("/api/users/me");
   return (

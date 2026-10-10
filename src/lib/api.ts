@@ -2,6 +2,7 @@ import "server-only";
 
 import { AccessTokenError } from "@auth0/nextjs-auth0/errors";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { auth0 } from "./auth0";
 
 // Calls the Friendwave API from the server (Server Components, Server Actions).
@@ -24,6 +25,9 @@ interface Envelope<T> {
 }
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<Envelope<T>> {
+  // Per-request work (see lib/session.ts): stops Next.js from starting these calls while
+  // it prerenders, where they'd be cancelled and show up as "can't reach the API"
+  await connection();
   let token: string;
   try {
     ({ token } = await auth0.getAccessToken());

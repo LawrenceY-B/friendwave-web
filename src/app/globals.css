@@ -99,3 +99,19 @@
     background: #0a0a0a;
   }
 }
+
+/* iPhone Safari zooms the page into any text field under 16px when you tap it. Fields are
+   16px on phones so that never happens (pinch-to-zoom still works); desktop sizes unchanged. */
+@media (max-width: 639px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px; /* unlayered, so it beats Tailwind utilities like text-sm */
+  }
+}
+
+/* A full-screen view is open (lib/hide-app-header.ts): the app header isn't drawn at all.
+   visibility (not display: none) so the page behind a post overlay doesn't jump up. */
+html[data-fullscreen] [data-app-header] {
+  visibility: hidden;
+}

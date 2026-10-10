@@ -1,6 +1,6 @@
 import type { Profile } from "@/interfaces/api";
 import { api, ApiError } from "@/lib/api";
-import { auth0 } from "@/lib/auth0";
+import { getSession } from "@/lib/session";
 import { House, LogOut, type LucideIcon, MessageCircle, Search, SquarePlus } from "lucide-react";
 import Link from "next/link";
 import { cache } from "react";
@@ -10,7 +10,7 @@ import { NotificationBell } from "./notification-bell";
 
 // Reads the session, so it must render inside <Suspense> (see layout.tsx)
 export async function UserMenu() {
-  const session = await auth0.getSession();
+  const session = await getSession();
   if (!session) {
     return (
       // Auth routes need a full page load, so <a>, not <Link>
@@ -95,7 +95,7 @@ const loadMe = cache(async () => {
 // The phone bottom bar, only for logged-in users. Rendered outside the header:
 // the header's backdrop-blur would otherwise pin a `fixed` child to the header.
 export async function MobileNav() {
-  const session = await auth0.getSession();
+  const session = await getSession();
   if (!session) return null;
   const me = await loadMe().catch(() => null);
   return <BottomNav me={me && { id: me.id, username: me.username, name: me.name, avatarUrl: me.avatarUrl }} />;

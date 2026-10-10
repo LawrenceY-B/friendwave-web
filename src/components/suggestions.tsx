@@ -4,7 +4,7 @@ import { Avatar } from "./avatar";
 import { FollowButton } from "./follow-button";
 
 // "Followed by alice and 2 others", or a generic line when there are no mutuals
-function reason(s: Suggestion) {
+export function reason(s: Suggestion) {
   if (s.mutualCount === 0 || s.followedBy.length === 0) return "Suggested for you";
   const others = s.mutualCount - s.followedBy.length;
   const names = s.followedBy.join(" and ");

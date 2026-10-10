@@ -20,14 +20,18 @@ export async function setLiked(postId: string, liked: boolean) {
   });
 }
 
-export async function setFollowing(userId: string, following: boolean) {
+// refresh: false while a new user picks several people on the empty feed. Any revalidation
+// re-renders the page you're on, which would swap the suggestions for the feed after the first follow.
+export async function setFollowing(userId: string, following: boolean, { refresh = true } = {}) {
   if (!isId(userId)) throw new Error("Invalid user id");
   const result = await api<{ following: boolean; followerCount: number }>(`/api/users/${userId}/follow`, {
     method: following ? "POST" : "DELETE",
   });
-  // Re-render the profile (follower count) and the feed (their posts appear/disappear)
-  revalidatePath(`/users/${userId}`);
-  revalidatePath("/");
+  if (refresh) {
+    // Re-render the profile (follower count) and the feed (their posts appear/disappear)
+    revalidatePath(`/users/${userId}`);
+    revalidatePath("/");
+  }
   return result;
 }
 

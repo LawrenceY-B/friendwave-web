@@ -1,6 +1,6 @@
 "use client";
 
-import { gsap, reducedMotion, ScrollTrigger } from "@/lib/motion";
+import { gsap, reducedMotion } from "@/lib/motion";
 import { useLenis } from "lenis/react";
 import { usePathname } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef } from "react";
@@ -66,8 +66,6 @@ export function MotionEffects() {
   useLayoutEffect(() => {
     const from = previous.current;
     previous.current = pathname;
-    // The page changed under scroll-linked animations: re-measure once it has laid out
-    requestAnimationFrame(() => ScrollTrigger.refresh());
     if (from === pathname || reducedMotion() || OWN_MOTION.test(from) || OWN_MOTION.test(pathname)) return;
     const main = document.querySelector("main");
     if (!main) return;
