@@ -58,8 +58,11 @@ export function ChatsNavIcon({ className }: { className: string }) {
   const label = useChatsLabel();
   return (
     <Link href="/chats" aria-label={label} title={label} className={`relative ${className}`}>
-      <MessageCircle className="size-5" />
-      <ChatsDot />
+      {/* Dot pinned to the icon itself, not the padded link (same as the bottom bar) */}
+      <span className="relative block">
+        <MessageCircle className="size-5" />
+        <ChatsDot />
+      </span>
     </Link>
   );
 }
