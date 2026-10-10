@@ -6,6 +6,7 @@ import Link from "next/link";
 import { cache } from "react";
 import { Avatar } from "./avatar";
 import { BottomNav } from "./bottom-nav";
+import { HeaderMenu } from "./header-menu";
 import { NotificationBell } from "./notification-bell";
 import { ChatsNavIcon, UnreadChatsSync } from "./unread-chats";
 
@@ -60,7 +61,8 @@ export async function UserMenu() {
       >
         <Avatar user={me} size="sm" />
       </Link>
-      <LogoutLink />
+      {/* ☰ on your own profile: theme, log out, delete account */}
+      <HeaderMenu meId={me.id} username={me.username} />
     </nav>
   );
 }

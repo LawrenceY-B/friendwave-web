@@ -112,14 +112,17 @@ export function createWaveScene(
     renderer.render(scene, camera);
   }
 
-  // Same palette as the app: neutral-900 dots on light, white dots on dark
-  const dark = window.matchMedia("(prefers-color-scheme: dark)");
+  // Same palette as the app: neutral-900 dots on light, white dots on dark. Follows the
+  // app's theme (the `dark` class on <html>), which also covers the System setting.
+  const html = document.documentElement;
   const applyTheme = () => {
-    uniforms.uColor.value.set(dark.matches ? "#ffffff" : "#171717");
-    uniforms.uAlpha.value = dark.matches ? 0.34 : 0.28;
+    const dark = html.classList.contains("dark");
+    uniforms.uColor.value.set(dark ? "#ffffff" : "#171717");
+    uniforms.uAlpha.value = dark ? 0.34 : 0.28;
     if (reduced) render();
   };
-  dark.addEventListener("change", applyTheme);
+  const themeObserver = new MutationObserver(applyTheme);
+  themeObserver.observe(html, { attributes: true, attributeFilter: ["class"] });
 
   function loop() {
     render();
@@ -170,7 +173,7 @@ export function createWaveScene(
     dispose() {
       stop();
       document.removeEventListener("visibilitychange", onVisibility);
-      dark.removeEventListener("change", applyTheme);
+      themeObserver.disconnect();
       geometry.dispose();
       material.dispose();
       renderer.dispose();

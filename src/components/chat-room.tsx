@@ -4,8 +4,10 @@ import type { Chat, Message } from "@/interfaces/api";
 import { deleteMessage, loadMessages, markChatRead, sendMessage } from "@/lib/actions";
 import { useHideAppHeader } from "@/lib/hide-app-header";
 import { gsap, reducedMotion, useGSAP } from "@/lib/motion";
+import { shrinkImage } from "@/lib/resize-image";
 import { markChatSeen } from "@/lib/unread-chats";
-import { ArrowLeft, Check, ChevronDown, Clock3, SendHorizontal, Trash2 } from "lucide-react";
+import { uploadChatPhoto } from "@/lib/upload";
+import { ArrowLeft, Check, ChevronDown, Clock3, ImagePlus, SendHorizontal, Trash2 } from "lucide-react";
 import Link from "next/link";
 import {
   type FormEvent,
@@ -114,12 +116,75 @@ export function ChatRoom({ chat, meId, initialMessages, initialCursor }: Props) 
   const presence = usePresence(other ? [other.id] : []);
   const otherOnline = other ? presence[other.id] === true : false;
 
+  const [typing, setTyping] = useState(false); // the other person is typing (see below)
+
   // ---- live updates ----
   useSocketEvent<Message>("message:new", (message) => {
     if (message.chatId !== chat.id) return;
     setMessages((prev) => upsert(prev, message));
-    if (message.senderId !== meId) markRead();
+    if (message.senderId !== meId) {
+      markRead();
+      setTyping(false); // their message arrived: they've stopped typing
+    }
   });
+
+  // ---- typing ----
+  // They're typing: "typing…" in the header and three dots, for 4s after their last signal
+  const typingTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useSocketEvent<{ chatId: string; userId: string }>("typing", ({ chatId, userId }) => {
+    if (chatId !== chat.id || userId === meId) return;
+    setTyping(true);
+    clearTimeout(typingTimer.current);
+    typingTimer.current = setTimeout(() => setTyping(false), 4000);
+  });
+  useEffect(() => () => clearTimeout(typingTimer.current), []);
+  // You're typing: tell them, at most every 2.5s
+  const lastTypingSent = useRef(0);
+  const onDraftChange = (value: string) => {
+    setDraft(value);
+    if (value.trim() && socket?.connected && Date.now() - lastTypingSent.current > 2500) {
+      lastTypingSent.current = Date.now();
+      socket.emit("typing", { chatId: chat.id });
+    }
+  };
+
+  // ---- photos ----
+  const photoInput = useRef<HTMLInputElement>(null);
+  async function sendPhoto(file: File) {
+    setError(null);
+    const text = draft.trim();
+    setDraft("");
+    const preview = URL.createObjectURL(file);
+    const tempId = `temp-${crypto.randomUUID()}`;
+    setMessages((prev) =>
+      upsert(prev, {
+        id: tempId,
+        chatId: chat.id,
+        senderId: meId,
+        text,
+        image: preview, // shown straight away, from your device
+        createdAt: new Date().toISOString(),
+        editedAt: null,
+        pending: true,
+      })
+    );
+    try {
+      const small = await shrinkImage(file, 1440);
+      const saved = await uploadChatPhoto(chat.id, small, text);
+      setMessages((prev) =>
+        upsert(
+          prev.filter((m) => m.id !== tempId),
+          saved
+        )
+      );
+    } catch (err) {
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
+      setDraft(text);
+      setError(err instanceof Error ? err.message : "Couldn't send the photo");
+    } finally {
+      setTimeout(() => URL.revokeObjectURL(preview), 10_000);
+    }
+  }
   useSocketEvent<Message>("message:updated", (message) => {
     if (message.chatId === chat.id) setMessages((prev) => upsert(prev, message));
   });
@@ -165,6 +230,7 @@ export function ChatRoom({ chat, meId, initialMessages, initialCursor }: Props) 
       chatId: chat.id,
       senderId: meId,
       text,
+      image: null,
       createdAt: new Date().toISOString(),
       editedAt: null,
       pending: true,
@@ -333,7 +399,15 @@ export function ChatRoom({ chat, meId, initialMessages, initialCursor }: Props) 
 
   // Your own connection being down matters most; then whether they're here (no last-seen time in the API)
   const statusText =
-    socket && status === "offline" ? "Reconnecting…" : otherOnline ? "online" : other ? "last seen recently" : "";
+    socket && status === "offline"
+      ? "Reconnecting…"
+      : typing
+        ? "typing…"
+        : otherOnline
+          ? "online"
+          : other
+            ? "last seen recently"
+            : "";
 
   const glass = "bg-white/80 shadow-sm ring-1 ring-black/5 backdrop-blur-md dark:bg-neutral-900/70 dark:ring-white/10";
   const pill = "rounded-full bg-black/25 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm dark:bg-white/15";
@@ -360,7 +434,7 @@ export function ChatRoom({ chat, meId, initialMessages, initialCursor }: Props) 
             )}
             <span
               aria-live="polite"
-              className={`block text-xs ${statusText === "online" ? "text-blue-600 dark:text-blue-400" : "text-neutral-500"}`}
+              className={`block text-xs ${statusText === "online" || statusText === "typing…" ? "text-blue-600 dark:text-blue-400" : "text-neutral-500"}`}
             >
               {statusText}
             </span>
@@ -406,7 +480,7 @@ export function ChatRoom({ chat, meId, initialMessages, initialCursor }: Props) 
             const first = !sameGroup(prev, message) || newDay;
             const last =
               !sameGroup(message, next) || (mounted && !!next && dayKey(next.createdAt) !== dayKey(message.createdAt));
-            const emoji = isEmojiOnly(message.text);
+            const emoji = !message.image && isEmojiOnly(message.text);
             const meta = (
               <>
                 {message.editedAt && <span>edited</span>}
@@ -473,7 +547,24 @@ export function ChatRoom({ chat, meId, initialMessages, initialCursor }: Props) 
                           : "bg-white text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100"
                       } ${last ? (mine ? "rounded-br-md" : "rounded-bl-md") : ""} ${message.pending ? "opacity-70" : ""}`}
                     >
-                      <span className="break-words whitespace-pre-wrap">{message.text}</span>
+                      {message.image && (
+                        // Tap to see it full size
+                        <a
+                          href={message.image}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="-mx-1.5 -mt-0.5 mb-1 block overflow-hidden rounded-xl"
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element -- chat photo from the API's media route (or a local preview) */}
+                          <img
+                            src={message.image}
+                            alt={message.text || "Photo"}
+                            data-testid="chat-photo"
+                            className="max-h-80 w-full min-w-40 object-cover"
+                          />
+                        </a>
+                      )}
+                      {message.text && <span className="break-words whitespace-pre-wrap">{message.text}</span>}
                       {/* Time (and tick) tucked into the bottom-right corner, Telegram-style */}
                       <span
                         className={`relative top-1.5 float-right ml-2 inline-flex items-center gap-1 text-[11px] ${
@@ -489,6 +580,19 @@ export function ChatRoom({ chat, meId, initialMessages, initialCursor }: Props) 
               </MessageRow>
             );
           })}
+          {typing && (
+            <li data-testid="typing" aria-label={`${other?.username ?? "They"} is typing`} className="mt-2 flex">
+              <span className="flex gap-1 rounded-2xl rounded-bl-md bg-white px-3.5 py-3 shadow-sm dark:bg-neutral-800">
+                {[0, 1, 2].map((i) => (
+                  <span
+                    key={i}
+                    className="size-1.5 animate-bounce rounded-full bg-neutral-400"
+                    style={{ animationDelay: `${i * 0.15}s` }}
+                  />
+                ))}
+              </span>
+            </li>
+          )}
         </ol>
       </div>
 
@@ -528,10 +632,31 @@ export function ChatRoom({ chat, meId, initialMessages, initialCursor }: Props) 
             </p>
           )}
           <div className="flex items-end gap-2">
+            <button
+              type="button"
+              onClick={() => photoInput.current?.click()}
+              aria-label="Attach a photo"
+              title="Attach a photo"
+              className={`flex size-11 shrink-0 items-center justify-center rounded-full ${glass} active:scale-90`}
+            >
+              <ImagePlus className="size-5" />
+            </button>
+            <input
+              ref={photoInput}
+              type="file"
+              accept="image/*"
+              hidden
+              data-testid="photo-input"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                e.target.value = ""; // the same photo can be picked again
+                if (file) void sendPhoto(file);
+              }}
+            />
             <textarea
               ref={textarea}
               value={draft}
-              onChange={(e) => setDraft(e.target.value)}
+              onChange={(e) => onDraftChange(e.target.value)}
               onKeyDown={onKeyDown}
               rows={1}
               maxLength={2000}
