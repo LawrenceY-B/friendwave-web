@@ -57,6 +57,9 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<Envelop
     );
   }
   const body = (await res.json().catch(() => null)) as Envelope<T> | null;
+  // The API no longer accepts this login (e.g. the account was deleted in Auth0): end the
+  // session instead of showing an error page you can't get out of
+  if (res.status === 401) redirect("/auth/logout");
   if (!res.ok || !body?.success) {
     throw new ApiError(res.status, body?.message ?? `API request failed (${res.status})`);
   }
