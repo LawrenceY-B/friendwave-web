@@ -34,15 +34,24 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<Envelop
   }
 
   const isForm = init.body instanceof FormData;
-  const res = await fetch(`${process.env.API_URL}${path}`, {
-    ...init,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      ...(init.body && !isForm ? { "Content-Type": "application/json" } : {}),
-      ...init.headers,
-    },
-    cache: "no-store",
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${process.env.API_URL}${path}`, {
+      ...init,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        ...(init.body && !isForm ? { "Content-Type": "application/json" } : {}),
+        ...init.headers,
+      },
+      cache: "no-store",
+    });
+  } catch {
+    // Connection refused, DNS failure, etc. Say what's wrong instead of a raw ECONNREFUSED
+    throw new ApiError(
+      503,
+      `Can't reach the Friendwave API at ${process.env.API_URL}. Is it running? (npm run dev in BackendProjects/Friendwave)`
+    );
+  }
   const body = (await res.json().catch(() => null)) as Envelope<T> | null;
   if (!res.ok || !body?.success) {
     throw new ApiError(res.status, body?.message ?? `API request failed (${res.status})`);

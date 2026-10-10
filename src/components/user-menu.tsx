@@ -1,5 +1,5 @@
 import type { Profile } from "@/interfaces/api";
-import { api } from "@/lib/api";
+import { api, ApiError } from "@/lib/api";
 import { auth0 } from "@/lib/auth0";
 import { SquarePlus } from "lucide-react";
 import Link from "next/link";
@@ -20,7 +20,21 @@ export async function UserMenu() {
     );
   }
 
-  const me = await api<Profile>("/api/users/me");
+  const me = await loadMe();
+  if (!me) {
+    // The API is down: keep the header usable instead of crashing the whole page
+    return (
+      <nav className="flex items-center gap-4 text-sm">
+        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+          API offline
+        </span>
+        <a href="/auth/logout" className="text-neutral-500 hover:underline">
+          Log out
+        </a>
+      </nav>
+    );
+  }
+
   return (
     <nav className="flex items-center gap-4 text-sm">
       <Link href="/" className="hover:underline">
@@ -45,4 +59,13 @@ export async function UserMenu() {
       </a>
     </nav>
   );
+}
+
+async function loadMe() {
+  try {
+    return await api<Profile>("/api/users/me");
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 503) return null;
+    throw error;
+  }
 }
