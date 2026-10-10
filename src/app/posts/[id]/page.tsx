@@ -1,4 +1,5 @@
 import { BackButton } from "@/components/back-button";
+import { PageTitle } from "@/components/page-title";
 import { PostDetail } from "@/components/post-detail";
 import { PostSkeleton } from "@/components/post-skeleton";
 import { Suspense } from "react";
@@ -8,7 +9,8 @@ import { Suspense } from "react";
 export default function PostPage({ params }: PageProps<"/posts/[id]">) {
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
+      <PageTitle title="Post" back />
+      <div className="hidden items-center gap-2 sm:flex">
         <BackButton />
         <h1 className="font-semibold">Post</h1>
       </div>

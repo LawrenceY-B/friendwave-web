@@ -1,4 +1,5 @@
 import { ChatList } from "@/components/chat-list";
+import { PageTitle } from "@/components/page-title";
 import type { Chat, Profile } from "@/interfaces/api";
 import { api } from "@/lib/api";
 import { Suspense } from "react";
@@ -6,7 +7,9 @@ import { Suspense } from "react";
 export default function ChatsPage() {
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-semibold">Chats</h1>
+      {/* A bottom tab: title in the phone header, no Back */}
+      <PageTitle title="Chats" />
+      <h1 className="hidden text-xl font-semibold sm:block">Chats</h1>
       <Suspense fallback={<ChatListSkeleton />}>
         <Chats />
       </Suspense>

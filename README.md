@@ -138,6 +138,11 @@ src/
 - **Photos:** swipe, or use ‹ ›, with dots showing which photo you're on (`components/post-images.tsx`).
   In the feed they run edge to edge across the centred column, with square corners. The header and the
   likes/caption rows are padded instead.
+- **Phone header = the page's title bar** (`components/header-title.tsx`, set by `<PageTitle>` on each page):
+  - a profile shows the username, the post page "Post", Chats "Chats", and so on
+  - pages you reach from somewhere get a Back button there; bottom-tab pages (your own profile, Chats, New post) don't
+  - the Feed and Search keep "Friendwave"
+  - from `sm:` up the header always says "Friendwave" and pages keep their own headings
 - **Phones get a bottom tab bar** (`components/bottom-nav.tsx`): five tabs like Instagram (Feed, Search, New post
   in the middle, Chats, and your profile picture; the header keeps the bell and log out) in a floating
   "liquid glass" pill (translucent, blurs and tints from what scrolls behind it; a glass lens marks the current tab).
@@ -188,6 +193,21 @@ browser (3-30 letters, numbers, `.` or `_`) and by the API, which answers "Usern
 - **Pages are kept alive:** Next.js keeps visited pages alive in the background (React `<Activity>`), so
   components that must start fresh reset themselves when hidden: the story viewer, the new-post form after
   a successful post, and the chat room (which catches up on missed messages when it reconnects).
+
+## Install as an app (PWA)
+
+Friendwave can be installed:
+- **Android, Chrome or Edge:** use "Install app" in the browser menu or address bar.
+- **iPhone:** Share → Add to Home Screen.
+
+Installed, it opens full screen with its own icon.
+- **Manifest:** `app/manifest.ts` (`/manifest.webmanifest`).
+- **Icons:** drawn in code in `lib/app-icon.tsx`. The app icons (`/pwa-icon/192`, `/512`, `/maskable-512`), the iPhone icon (`app/apple-icon.tsx`) and the favicon (`app/icon.tsx`) are rendered at build time.
+- **Service worker** (`public/sw.js`, registered in production only by `components/service-worker.tsx`):
+  - caches the app's hashed files (`/_next/static`) for fast repeat loads
+  - shows `/offline` when a page can't load
+  - never caches API calls, page data or logged-in pages
+  - `sw.js` itself is served with `no-store`, so updates reach users on their next visit; bump `VERSION` in it to clear old caches
 
 ## Deploying on Vercel
 

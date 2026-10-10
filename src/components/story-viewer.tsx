@@ -228,7 +228,7 @@ export function StoryViewer({ groups: initialGroups, startIndex, meId }: Props) 
         )}
 
         {/* Progress: one bar per story; the current one fills over DURATION_MS, then moves on */}
-        <div className="absolute inset-x-0 top-0 z-10 flex gap-1 p-2">
+        <div className="absolute inset-x-0 top-0 z-10 flex gap-1 p-2 pt-[max(0.5rem,env(safe-area-inset-top))]">
           {group.stories.map((s, i) => (
             <div key={s.id} className="h-0.5 flex-1 overflow-hidden rounded-full bg-white/30">
               {i < position.story && <div className="h-full w-full bg-white" />}
@@ -248,7 +248,7 @@ export function StoryViewer({ groups: initialGroups, startIndex, meId }: Props) 
           ))}
         </div>
 
-        <header className="absolute inset-x-0 top-3 z-10 flex items-center gap-2 px-3 pt-2 text-white">
+        <header className="absolute inset-x-0 top-[calc(0.75rem+env(safe-area-inset-top))] z-10 flex items-center gap-2 px-3 pt-2 text-white">
           <Avatar user={group.author} size="sm" />
           <div className="flex min-w-0 flex-col">
             <span className="flex items-center gap-2">

@@ -68,7 +68,7 @@ export function PostOverlay({ children }: { children: ReactNode }) {
         type="button"
         onClick={close}
         aria-label="Close post"
-        className="absolute top-3 right-3 z-10 rounded-full bg-black/40 p-2 text-white transition-transform hover:rotate-90 hover:bg-black/60"
+        className="absolute top-[calc(0.75rem+env(safe-area-inset-top))] right-3 z-10 rounded-full bg-black/40 p-2 text-white transition-transform hover:rotate-90 hover:bg-black/60"
       >
         <X className="size-5" />
       </button>
@@ -77,7 +77,7 @@ export function PostOverlay({ children }: { children: ReactNode }) {
         role="dialog"
         aria-modal="true"
         aria-label="Post"
-        className="h-full w-full overflow-hidden bg-white sm:h-[85vh] sm:max-w-4xl sm:rounded-xl dark:bg-neutral-950"
+        className="h-full w-full overflow-hidden bg-white pt-[env(safe-area-inset-top)] sm:h-[85vh] sm:max-w-4xl sm:rounded-xl sm:pt-0 dark:bg-neutral-950"
       >
         {children}
       </div>
