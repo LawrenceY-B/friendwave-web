@@ -113,6 +113,18 @@ src/
   event, so every update goes through one `upsert` keyed by message id.
 - **Reconnects:** after a drop, it fetches the latest page to catch up on anything missed.
 - Delete your own messages (hover). Edits and deletes made elsewhere show up live.
+- **Look (Telegram-style), full screen:**
+  - **Screen:** a blue → violet wallpaper with doodles (`.chat-wallpaper` in `globals.css`). Floating glass pills
+    sit on top: back, then name + status ("online", "last seen recently", or "Reconnecting…"), then their picture.
+  - **Bubbles:**
+    - yours on the right in light blue, theirs on the left in white
+    - grouped when the same person sends within 5 minutes, with a tail on the last bubble of each group
+    - the time and a tick (a clock while sending, ✓ once sent) inside the bubble
+  - **Emoji-only messages** (1–3 emoji) show big, without a bubble.
+  - **Date pills:** "Today", "Yesterday" or a date. They're rendered after hydration because they depend on
+    your timezone.
+  - **Jump button:** while you're scrolled up, new messages don't pull you down. A ⌄ button counts them
+    and jumps to the latest.
 
 ## Look and feel (Instagram-style)
 
@@ -124,6 +136,8 @@ src/
   story, Delete post with a second tap to confirm; others: Copy link, Go to profile), and "Following ▾" on a profile
   (Unfollow; Close Friends, Favourites, Mute and Restrict are marked *Coming soon*).
 - **Photos:** swipe, or use ‹ ›, with dots showing which photo you're on (`components/post-images.tsx`).
+  In the feed they run edge to edge across the centred column, with square corners. The header and the
+  likes/caption rows are padded instead.
 - **Phones get a bottom tab bar** (`components/bottom-nav.tsx`): Feed, Search, New post and Chats in a floating
   "liquid glass" pill (translucent, blurs and tints from what scrolls behind it; a glass lens marks the current tab).
   It goes solid if "Reduce transparency" is on, and hides inside a conversation and in the story viewer. From `sm:` up

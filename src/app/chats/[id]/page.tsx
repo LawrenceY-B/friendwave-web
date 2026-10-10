@@ -6,11 +6,26 @@ import { Suspense } from "react";
 
 export default function ChatPage({ params }: PageProps<"/chats/[id]">) {
   return (
-    <Suspense
-      fallback={<div className="h-[calc(100dvh-6.5rem)] animate-pulse rounded-xl bg-neutral-200 dark:bg-neutral-900" />}
-    >
+    <Suspense fallback={<ChatSkeleton />}>
       <ChatView params={params} />
     </Suspense>
+  );
+}
+
+// The chat's full-screen wallpaper with placeholder pills, so nothing jumps when it loads
+function ChatSkeleton() {
+  return (
+    <div className="chat-wallpaper fixed inset-0 z-40">
+      <div className="mx-auto flex max-w-xl animate-pulse items-center gap-2 px-3 pt-3">
+        <div className="size-11 rounded-full bg-white/60 dark:bg-white/10" />
+        <div className="h-11 flex-1 rounded-full bg-white/60 dark:bg-white/10" />
+        <div className="size-10 rounded-full bg-white/60 dark:bg-white/10" />
+      </div>
+      <div className="absolute inset-x-0 bottom-0 mx-auto flex max-w-xl animate-pulse gap-2 px-3 pb-3">
+        <div className="h-11 flex-1 rounded-full bg-white/60 dark:bg-white/10" />
+        <div className="size-11 rounded-full bg-white/60 dark:bg-white/10" />
+      </div>
+    </div>
   );
 }
 

@@ -5,8 +5,9 @@ import { useLenis } from "lenis/react";
 import { usePathname } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef } from "react";
 
-// Overlays animate themselves; fading the page behind them would flash it
-const OWN_MOTION = /^\/(posts|stories)(\/|$)/;
+// Overlays and the full-screen chat animate themselves; fading (and so transforming) the
+// page would flash what's behind them or shift their fixed layout
+const OWN_MOTION = /^\/(posts|stories|chats\/[^/]+)(\/|$)/;
 
 // App-wide motion, mounted once in the layout:
 // - anything marked `data-reveal` slides up into view the first time it scrolls in
