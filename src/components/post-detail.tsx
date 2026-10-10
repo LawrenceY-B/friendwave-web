@@ -52,7 +52,10 @@ export async function PostDetail({ id, variant }: { id: string; variant: "page" 
         </div>
         <div className="flex min-h-0 flex-col border-neutral-200 sm:border-l dark:border-neutral-800">
           <PostHeader post={post} meId={me.id} />
-          <div className="flex-1 space-y-4 overflow-y-auto border-y border-neutral-200 p-3 dark:border-neutral-800">
+          <div
+            data-lenis-prevent
+            className="flex-1 space-y-4 overflow-y-auto border-y border-neutral-200 p-3 dark:border-neutral-800"
+          >
             <PostCaption post={post} />
             {commentsList}
           </div>

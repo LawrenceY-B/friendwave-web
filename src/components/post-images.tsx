@@ -1,6 +1,8 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Heart } from "lucide-react";
+import { likeBurst } from "@/lib/like-burst";
+import { gsap, reducedMotion, useGSAP } from "@/lib/motion";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { type KeyboardEvent, type PointerEvent, useContext, useRef, useState } from "react";
 import { PostLiveContext } from "./post-live";
@@ -10,13 +12,31 @@ const TAP_SLOP_PX = 10; // more movement than this is a swipe, not a tap
 
 // A post's photos: swipe (or scroll) sideways, or use the ‹ › buttons / ← → keys.
 // Swiping is native scroll-snap, so it feels right on touch screens and trackpads.
-export function PostImages({ images, alt }: { images: string[]; alt: string }) {
+export function PostImages({ images, alt, parallax = false }: { images: string[]; alt: string; parallax?: boolean }) {
   const track = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
   const many = images.length > 1;
   // Double tap to like (when this post's live state is available)
   const live = useContext(PostLiveContext);
-  const [heart, setHeart] = useState(0); // bump to replay the heart animation
+  const frame = useRef<HTMLDivElement>(null);
+
+  // In the feed, photos drift slightly as they scroll past (a touch of depth)
+  useGSAP(
+    () => {
+      if (!parallax || reducedMotion()) return;
+      gsap.fromTo(
+        "img",
+        { scale: 1.12, yPercent: -4 },
+        {
+          scale: 1,
+          yPercent: 4,
+          ease: "none",
+          scrollTrigger: { trigger: frame.current, start: "top bottom", end: "bottom top", scrub: 0.6 },
+        }
+      );
+    },
+    { scope: frame, dependencies: [parallax, images.length] }
+  );
   const down = useRef<{ x: number; y: number; t: number } | null>(null);
   const lastTap = useRef<{ x: number; y: number; t: number } | null>(null);
 
@@ -35,7 +55,13 @@ export function PostImages({ images, alt }: { images: string[]; alt: string }) {
     if (prev && tap.t - prev.t < DOUBLE_TAP_MS && Math.hypot(tap.x - prev.x, tap.y - prev.y) < 40) {
       lastTap.current = null;
       live.setLike(true); // like only, never unlike (like Instagram)
-      setHeart((n) => n + 1);
+      // The celebration, where you tapped, plus a little squish of the photo
+      const box = frame.current?.getBoundingClientRect();
+      if (frame.current && box) {
+        likeBurst(frame.current, tap.x - box.left, tap.y - box.top);
+        if (!reducedMotion())
+          gsap.fromTo(track.current, { scale: 0.97 }, { scale: 1, duration: 0.6, ease: "elastic.out(1, 0.4)" });
+      }
     } else {
       lastTap.current = tap;
     }
@@ -60,7 +86,7 @@ export function PostImages({ images, alt }: { images: string[]; alt: string }) {
   };
 
   return (
-    <div className="relative bg-neutral-100 dark:bg-neutral-900">
+    <div ref={frame} className="relative overflow-hidden bg-neutral-100 dark:bg-neutral-900">
       <div
         ref={track}
         onScroll={onScroll}
@@ -72,6 +98,7 @@ export function PostImages({ images, alt }: { images: string[]; alt: string }) {
         onPointerDown={onPointerDown}
         onPointerUp={onPointerUp}
         onPointerCancel={() => (down.current = null)}
+        data-lenis-prevent-horizontal
         // "manipulation": keep swiping/pinching, but no double-tap-to-zoom
         className="flex touch-manipulation snap-x snap-mandatory [scrollbar-width:none] overflow-x-auto [&::-webkit-scrollbar]:hidden"
       >
@@ -88,15 +115,6 @@ export function PostImages({ images, alt }: { images: string[]; alt: string }) {
           />
         ))}
       </div>
-
-      {heart > 0 && (
-        <Heart
-          key={heart}
-          aria-hidden
-          data-testid="like-heart"
-          className="heart-pop pointer-events-none absolute top-1/2 left-1/2 size-24 fill-white text-white drop-shadow-lg"
-        />
-      )}
 
       {many && (
         <>
@@ -125,7 +143,7 @@ export function PostImages({ images, alt }: { images: string[]; alt: string }) {
               <span
                 key={src}
                 data-active={i === index}
-                className={`size-1.5 rounded-full ${i === index ? "bg-blue-500" : "bg-white/70"}`}
+                className={`h-1.5 rounded-full transition-all duration-300 ${i === index ? "w-4 bg-white" : "w-1.5 bg-white/60"}`}
               />
             ))}
           </div>

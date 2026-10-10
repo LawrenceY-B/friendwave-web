@@ -27,7 +27,7 @@ export function Suggestions({
       <h2 className="text-sm font-semibold text-neutral-500">{title}</h2>
       <ul className="-mx-3">
         {suggestions.map((s) => (
-          <li key={s.id} className="flex items-center gap-3 p-3">
+          <li key={s.id} data-reveal className="flex items-center gap-3 p-3">
             <Link href={`/users/${s.id}`} className="flex min-w-0 flex-1 items-center gap-3">
               <Avatar user={s} />
               <span className="min-w-0">

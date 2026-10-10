@@ -1,5 +1,7 @@
+import { MotionEffects } from "@/components/motion-effects";
 import { NavigationTracker } from "@/components/navigation-tracker";
 import { RealtimeProvider } from "@/components/realtime-provider";
+import { SmoothScroll } from "@/components/smooth-scroll";
 import { MobileNav, UserMenu } from "@/components/user-menu";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
@@ -29,29 +31,35 @@ export default function RootLayout({ children, modal }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col bg-neutral-50 dark:bg-black">
         {/* One live connection for the whole tab (chat, live counts, notifications, presence) */}
         <RealtimeProvider>
-          {/* Reads the URL, so it needs a boundary; renders nothing */}
-          <Suspense fallback={null}>
-            <NavigationTracker />
-          </Suspense>
-          <header className="sticky top-0 z-10 border-b border-neutral-200 bg-white/80 backdrop-blur dark:border-neutral-800 dark:bg-black/80">
-            <div className="mx-auto flex h-14 max-w-xl items-center justify-between px-4">
-              <Link href="/" className="text-lg font-bold tracking-tight">
-                Friendwave
-              </Link>
-              {/* The menu reads the session, so it streams in; the rest of the header is static */}
-              <Suspense
-                fallback={<div className="h-8 w-24 animate-pulse rounded-full bg-neutral-200 dark:bg-neutral-800" />}
-              >
-                <UserMenu />
-              </Suspense>
-            </div>
-          </header>
-          {/* Extra bottom padding on phones so the bottom bar never covers content */}
-          <main className="mx-auto w-full max-w-xl flex-1 px-4 pt-6 pb-28 sm:pb-6">{children}</main>
-          <Suspense fallback={null}>
-            <MobileNav />
-          </Suspense>
-          {modal}
+          <SmoothScroll>
+            {/* Reads the URL, so it needs a boundary; renders nothing */}
+            <Suspense fallback={null}>
+              <NavigationTracker />
+              <MotionEffects />
+            </Suspense>
+            <header
+              data-app-header
+              className="sticky top-0 z-10 border-b border-neutral-200 bg-white/80 backdrop-blur dark:border-neutral-800 dark:bg-black/80"
+            >
+              <div className="mx-auto flex h-14 max-w-xl items-center justify-between px-4">
+                <Link href="/" className="text-lg font-bold tracking-tight">
+                  Friendwave
+                </Link>
+                {/* The menu reads the session, so it streams in; the rest of the header is static */}
+                <Suspense
+                  fallback={<div className="h-8 w-24 animate-pulse rounded-full bg-neutral-200 dark:bg-neutral-800" />}
+                >
+                  <UserMenu />
+                </Suspense>
+              </div>
+            </header>
+            {/* Extra bottom padding on phones so the bottom bar never covers content */}
+            <main className="mx-auto w-full max-w-xl flex-1 px-4 pt-6 pb-28 sm:pb-6">{children}</main>
+            <Suspense fallback={null}>
+              <MobileNav />
+            </Suspense>
+            {modal}
+          </SmoothScroll>
         </RealtimeProvider>
       </body>
     </html>

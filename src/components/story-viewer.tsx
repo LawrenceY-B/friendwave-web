@@ -3,6 +3,7 @@
 import type { StoryGroup } from "@/interfaces/api";
 import { deleteStory } from "@/lib/actions";
 import { timeAgo } from "@/lib/format";
+import { gsap, reducedMotion, useGSAP } from "@/lib/motion";
 import { markStorySeen } from "@/lib/seen-stories";
 import { ChevronRight, Trash2, X } from "lucide-react";
 import Link from "next/link";
@@ -10,6 +11,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, useTransition } from "react";
 import { Avatar } from "./avatar";
 import { useBack } from "./navigation-tracker";
+import { useScrollLock } from "./smooth-scroll";
 
 const DURATION_MS = 5000;
 const HOLD_MS = 250; // pressing longer than this pauses instead of skipping
@@ -31,6 +33,7 @@ export function StoryViewer({ groups: initialGroups, startIndex, meId }: Props) 
   // "See post" opens the post on top of the stories; they wait underneath until it's closed
   const hidden = usePathname() !== "/stories";
   const pressedAt = useRef(0);
+  const direction = useRef(1); // 1 = forward, -1 = back: which way the next story swings in
 
   // Next.js keeps visited pages alive in the background (React <Activity>) and restores
   // their state when you come back. A story viewer should always start at the person
@@ -52,6 +55,7 @@ export function StoryViewer({ groups: initialGroups, startIndex, meId }: Props) 
   const close = useBack("/");
 
   const next = useCallback(() => {
+    direction.current = 1;
     const { group: g, story: s } = position;
     if (s < groups[g].stories.length - 1) setPosition({ group: g, story: s + 1 });
     else if (g < groups.length - 1) setPosition({ group: g + 1, story: 0 });
@@ -59,6 +63,7 @@ export function StoryViewer({ groups: initialGroups, startIndex, meId }: Props) 
   }, [position, groups, close]);
 
   const prev = useCallback(() => {
+    direction.current = -1;
     const { group: g, story: s } = position;
     if (s > 0) setPosition({ group: g, story: s - 1 });
     else if (g > 0) setPosition({ group: g - 1, story: groups[g - 1].stories.length - 1 });
@@ -82,6 +87,52 @@ export function StoryViewer({ groups: initialGroups, startIndex, meId }: Props) 
     return () => window.removeEventListener("keydown", onKey);
   }, [next, prev, close, hidden, bubbleFor]);
 
+  // ---- motion ----
+  const root = useRef<HTMLDivElement>(null);
+  const card = useRef<HTMLDivElement>(null);
+  const backdrop = useRef<HTMLImageElement>(null);
+  const bubble = useRef<HTMLButtonElement>(null);
+  useScrollLock(!hidden);
+
+  // Opening: the stories open out of a circle in the middle, like a portal
+  useGSAP(() => {
+    if (reducedMotion()) return;
+    gsap.fromTo(
+      root.current,
+      { clipPath: "circle(0% at 50% 50%)" },
+      { clipPath: "circle(150% at 50% 50%)", duration: 0.7, ease: "power3.inOut", clearProps: "clipPath" }
+    );
+  });
+
+  // Each story: the post swings in in 3D from the side you're heading to; the blurred backdrop cross-fades
+  const storyId = story?.id;
+  useGSAP(
+    () => {
+      if (!storyId || reducedMotion()) return;
+      const d = direction.current;
+      gsap.fromTo(
+        card.current,
+        { opacity: 0, xPercent: 35 * d, rotationY: -40 * d, scale: 0.85, transformPerspective: 1000 },
+        { opacity: 1, xPercent: 0, rotationY: 0, scale: 1, duration: 0.6, ease: "power3.out", clearProps: "transform" }
+      );
+      gsap.fromTo(backdrop.current, { opacity: 0, scale: 1.3 }, { opacity: 0.5, scale: 1.1, duration: 0.9 });
+    },
+    { dependencies: [storyId] }
+  );
+
+  // "See post" springs out of the card
+  useGSAP(
+    () => {
+      if (!bubbleFor || reducedMotion()) return;
+      gsap.fromTo(
+        bubble.current,
+        { scale: 0, rotation: -12, opacity: 0 },
+        { scale: 1, rotation: 0, opacity: 1, duration: 0.55, ease: "elastic.out(1.1, 0.45)" }
+      );
+    },
+    { dependencies: [bubbleFor] }
+  );
+
   if (!group || !story) return null;
   const isMine = group.author.id === meId;
   const originalAuthor = story.post.author && story.post.author.id !== group.author.id ? story.post.author : null;
@@ -94,7 +145,7 @@ export function StoryViewer({ groups: initialGroups, startIndex, meId }: Props) 
     pressedAt.current = Date.now();
     setPaused(true);
   };
-  const pressEnd = (move: () => void) => () => {
+  const pressEnd = (move: () => void) => {
     setPaused(false);
     if (Date.now() - pressedAt.current >= HOLD_MS) return;
     if (bubbleOpen) setBubbleFor(null);
@@ -118,6 +169,8 @@ export function StoryViewer({ groups: initialGroups, startIndex, meId }: Props) 
 
   return (
     <div
+      ref={root}
+      data-lenis-prevent
       role="dialog"
       aria-modal="true"
       aria-label="Stories"
@@ -129,18 +182,19 @@ export function StoryViewer({ groups: initialGroups, startIndex, meId }: Props) 
             {/* Blurred backdrop of the same photo */}
             {/* eslint-disable-next-line @next/next/no-img-element -- story image from the API's media route */}
             <img
+              ref={backdrop}
               src={image}
               alt=""
               aria-hidden
               className="absolute inset-0 size-full scale-110 object-cover opacity-50 blur-2xl"
             />
             {/* The post as a card in the middle, above the tap areas: tapping it offers "See post" */}
-            <div className="absolute inset-x-6 top-1/2 z-10 -translate-y-1/2">
+            <div ref={card} className="absolute inset-x-6 top-1/2 z-10 -translate-y-1/2">
               <button
                 type="button"
                 // Like the rest of the story: hold to pause; a tap toggles the bubble
                 onPointerDown={pressStart}
-                onPointerUp={pressEnd(() => setBubbleFor(story.id))}
+                onPointerUp={() => pressEnd(() => setBubbleFor(story.id))}
                 onPointerLeave={() => setPaused(false)}
                 // Keyboard (Enter/Space) has no pointer events
                 onClick={(e) => e.detail === 0 && setBubbleFor(bubbleOpen ? null : story.id)}
@@ -157,6 +211,7 @@ export function StoryViewer({ groups: initialGroups, startIndex, meId }: Props) 
               </button>
               {bubbleOpen && (
                 <button
+                  ref={bubble}
                   type="button"
                   onClick={() => {
                     setBubbleFor(null); // gone when you come back to the story
@@ -244,7 +299,7 @@ export function StoryViewer({ groups: initialGroups, startIndex, meId }: Props) 
           aria-label="Previous story"
           className="absolute inset-y-0 left-0 z-0 w-1/3"
           onPointerDown={pressStart}
-          onPointerUp={pressEnd(prev)}
+          onPointerUp={() => pressEnd(prev)}
           onPointerLeave={() => setPaused(false)}
         />
         <button
@@ -252,7 +307,7 @@ export function StoryViewer({ groups: initialGroups, startIndex, meId }: Props) 
           aria-label="Next story"
           className="absolute inset-y-0 right-0 z-0 w-2/3"
           onPointerDown={pressStart}
-          onPointerUp={pressEnd(next)}
+          onPointerUp={() => pressEnd(next)}
           onPointerLeave={() => setPaused(false)}
         />
 

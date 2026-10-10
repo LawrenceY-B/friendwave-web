@@ -61,7 +61,7 @@ export function NotificationList({
           // A post notification opens the post (on top of this page); a follow opens their profile
           const href = n.post ? `/posts/${n.post.id}` : n.actor ? `/users/${n.actor.id}` : "#";
           return (
-            <li key={n.id} data-unread={!n.read || undefined}>
+            <li key={n.id} data-reveal data-unread={!n.read || undefined}>
               <Link
                 href={href}
                 className="flex items-center gap-3 rounded-xl p-3 hover:bg-neutral-100 dark:hover:bg-neutral-900"

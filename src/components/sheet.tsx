@@ -1,7 +1,9 @@
 "use client";
 
+import { gsap, reducedMotion } from "@/lib/motion";
 import type { LucideIcon } from "lucide-react";
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useScrollLock } from "./smooth-scroll";
 
 interface SheetProps {
   title: string;
@@ -25,9 +27,30 @@ export function Sheet({ title, open, onClose, children }: SheetProps) {
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
-    if (open && !dialog.open) dialog.showModal();
+    if (open && !dialog.open) {
+      dialog.showModal();
+      // Springs up from the bottom on phones; zooms in as a dialog on larger screens
+      if (!reducedMotion()) {
+        const phone = window.matchMedia("(max-width: 639px)").matches;
+        gsap.fromTo(dialog, phone ? { yPercent: 100 } : { scale: 0.85, opacity: 0, y: 20 }, {
+          ...(phone ? { yPercent: 0 } : { scale: 1, opacity: 1, y: 0 }),
+          duration: phone ? 0.55 : 0.4,
+          ease: phone ? "back.out(1.1)" : "back.out(1.8)",
+          clearProps: "transform,opacity", // dragging the handle sets its own transform
+        });
+        gsap.from(dialog.querySelectorAll("li, button"), {
+          opacity: 0,
+          y: 12,
+          duration: 0.35,
+          stagger: 0.04,
+          delay: 0.1,
+        });
+      }
+    }
     if (!open && dialog.open) dialog.close();
   }, [open]);
+
+  useScrollLock(open);
 
   // Next.js keeps pages alive after you leave them; a menu shouldn't still be open when you come back
   useLayoutEffect(() => () => onCloseRef.current(), []);
@@ -49,6 +72,7 @@ export function Sheet({ title, open, onClose, children }: SheetProps) {
   return (
     <dialog
       ref={ref}
+      data-lenis-prevent
       aria-label={title}
       onCancel={(e) => {
         e.preventDefault(); // Esc: let React state close it

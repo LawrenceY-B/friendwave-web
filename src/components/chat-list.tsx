@@ -28,7 +28,7 @@ export function ChatList({ chats: initialChats, meId }: { chats: Chat[]; meId: s
         const other = chat.participants[0] ?? null;
         const last = chat.lastMessage;
         return (
-          <li key={chat.id}>
+          <li key={chat.id} data-reveal>
             <Link
               href={`/chats/${chat.id}`}
               className="flex items-center gap-3 rounded-xl p-3 hover:bg-neutral-100 dark:hover:bg-neutral-900"

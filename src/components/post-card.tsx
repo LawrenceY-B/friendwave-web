@@ -67,10 +67,14 @@ export function PostCard({ post, meId }: { post: Post; meId: string }) {
   return (
     <PostLive post={post}>
       {/* Instagram-style: no card, just a thin line under each post */}
-      <article className="border-b border-neutral-200 pb-3 dark:border-neutral-800">
+      <article data-reveal className="border-b border-neutral-200 pb-3 dark:border-neutral-800">
         <PostHeader post={post} meId={meId} />
         <div className="overflow-hidden rounded-md">
-          <PostImages images={post.images} alt={post.caption || `Photo by ${post.author?.username ?? "unknown"}`} />
+          <PostImages
+            parallax
+            images={post.images}
+            alt={post.caption || `Photo by ${post.author?.username ?? "unknown"}`}
+          />
         </div>
         <div className="space-y-2 px-1 pt-3">
           <PostCounts post={post} />
