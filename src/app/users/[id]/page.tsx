@@ -5,6 +5,7 @@ import { openChat } from "@/lib/actions";
 import { api, ApiError, apiPage } from "@/lib/api";
 import { plural } from "@/lib/format";
 import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
@@ -39,6 +40,14 @@ async function ProfileView({ params }: { params: PageProps<"/users/[id]">["param
         <div className="min-w-0 flex-1 space-y-3">
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="truncate text-xl font-semibold">{profile.username}</h1>
+            {profile.isMe && (
+              <Link
+                href="/settings/profile"
+                className="rounded-lg border border-neutral-300 px-4 py-1.5 text-sm font-medium dark:border-neutral-700"
+              >
+                Edit profile
+              </Link>
+            )}
             {!profile.isMe && (
               <>
                 <FollowButton userId={profile.id} isFollowing={profile.isFollowing} />

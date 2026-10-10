@@ -1,10 +1,10 @@
 "use server";
 
-import type { Chat, Comment, Message, Post } from "@/interfaces/api";
+import type { Chat, Comment, Message, Post, Profile } from "@/interfaces/api";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { api, ApiError, apiPage } from "./api";
-import { MAX_CAPTION, MAX_IMAGE_BYTES, MAX_IMAGES } from "./limits";
+import { MAX_BIO, MAX_CAPTION, MAX_IMAGE_BYTES, MAX_IMAGES, MAX_NAME, USERNAME_HINT, USERNAME_PATTERN } from "./limits";
 
 // Server Actions: called from Client Components, run on the server.
 // They're reachable by direct POST, so each one authenticates: api() gets the
@@ -130,4 +130,50 @@ export async function removeReply(postId: string, commentId: string, replyId: st
   if (!isId(postId) || !isId(commentId) || !isReplyId(replyId)) throw new Error("Invalid id");
   await api(`/api/comments/${commentId}/replies/${replyId}`, { method: "DELETE" });
   revalidatePath(`/posts/${postId}`);
+}
+
+// ---- profile ----
+
+export interface UpdateProfileState {
+  error?: string;
+}
+
+// Used with useActionState. The form only includes fields that changed.
+export async function updateProfile(_prev: UpdateProfileState, formData: FormData): Promise<UpdateProfileState> {
+  const body = new FormData();
+  const name = formData.get("name");
+  const username = formData.get("username");
+  const bio = formData.get("bio");
+  const avatar = formData.get("avatar");
+
+  if (typeof name === "string") {
+    const trimmed = name.trim();
+    if (!trimmed || trimmed.length > MAX_NAME) return { error: `Name must be 1-${MAX_NAME} characters.` };
+    body.append("name", trimmed);
+  }
+  if (typeof username === "string") {
+    if (!new RegExp(USERNAME_PATTERN).test(username)) return { error: `Username: ${USERNAME_HINT}.` };
+    body.append("username", username);
+  }
+  if (typeof bio === "string") {
+    if (bio.length > MAX_BIO) return { error: `Bio can be at most ${MAX_BIO} characters.` };
+    body.append("bio", bio);
+  }
+  if (avatar instanceof File && avatar.size > 0) {
+    if (!avatar.type.startsWith("image/")) return { error: "Your picture must be an image." };
+    if (avatar.size > MAX_IMAGE_BYTES) return { error: "Your picture must be 5 MB or smaller." };
+    body.append("avatar", avatar, avatar.name);
+  }
+
+  let me: Profile;
+  try {
+    me = await api<Profile>("/api/users/me", { method: "PATCH", body });
+  } catch (error) {
+    // 409 username taken, 400 invalid input: show the API's message
+    if (error instanceof ApiError && error.status < 500) return { error: error.message };
+    throw error;
+  }
+  // Name, username and picture show up in the header and on posts everywhere
+  revalidatePath("/", "layout");
+  redirect(`/users/${me.id}`);
 }

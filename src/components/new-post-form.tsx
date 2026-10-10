@@ -93,9 +93,16 @@ export function NewPostForm() {
         </p>
       </div>
 
-      {(pickError || state.error) && (
+      {/* Two independent messages: a file-picking problem and the last save's result.
+          Showing only one meant a stale save error could hide a new picking error. */}
+      {pickError && (
         <p role="alert" className="text-sm text-red-600">
-          {state.error ?? pickError}
+          {pickError}
+        </p>
+      )}
+      {state.error && (
+        <p role="alert" className="text-sm text-red-600">
+          {state.error}
         </p>
       )}
 

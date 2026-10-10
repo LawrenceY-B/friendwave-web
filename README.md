@@ -47,8 +47,8 @@ Browser ──▶ Next.js server ──(Bearer access token)──▶ Friendwave
 
 ```
 src/
-  app/            pages: / (landing or feed), /posts/new, /posts/[id], /users/[id], /chats, /chats/[id], error + not-found
-  components/     avatar, post card, new-post form, comments, like/follow buttons, chat room, user menu, skeletons
+  app/            pages: / (landing or feed), /posts/new, /posts/[id], /users/[id], /settings/profile, /chats, /chats/[id], error + not-found
+  components/     avatar, post card, new-post form, edit-profile form, comments, like/follow buttons, chat room, user menu, skeletons
   interfaces/     API types (aliases over the generated file)
   lib/            auth0 client, API helper, server actions, socket, upload limits, formatting
   proxy.ts        Auth0 routes + session refresh
@@ -87,6 +87,13 @@ src/
   own posts, and replies on your own comments. Each change is a Server Action that re-renders the page in
   the same round trip.
 
+## Profile editing (`/settings/profile`)
+
+"Edit profile" on your own profile. Change your picture (with preview), name, username and bio. Only
+changed fields are sent, and Save stays disabled until something changes. Usernames are checked in the
+browser (3-30 letters, numbers, `.` or `_`) and by the API, which answers "Username already taken"
+(ignoring case). After saving, the whole layout is revalidated, so the header's picture and name update too.
+
 ## Next up
 
-Stories and profile editing. The API already supports both.
+Stories. The API already supports them.
