@@ -195,6 +195,14 @@ export async function listPeople(userId: string, which: "followers" | "following
 
 // ---- notifications ----
 
+// Fresh unread counts, for catching up after the app was in the background
+export async function loadUnreadNotificationCount() {
+  return (await api<{ count: number }>("/api/notifications/unread-count")).count;
+}
+export async function loadUnreadChatIds() {
+  return (await api<{ chatIds: string[] }>("/api/chats/unread")).chatIds;
+}
+
 export async function markNotificationsRead() {
   await api("/api/notifications/read", { method: "POST" });
 }
