@@ -1,10 +1,10 @@
 "use server";
 
-import type { Chat, Comment, Message, Post, Profile, UserSummary } from "@/interfaces/api";
+import type { Chat, Comment, Message, Profile, UserSummary } from "@/interfaces/api";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { api, ApiError, apiPage } from "./api";
-import { MAX_BIO, MAX_CAPTION, MAX_IMAGE_BYTES, MAX_IMAGES, MAX_NAME, USERNAME_HINT, USERNAME_PATTERN } from "./limits";
+import { MAX_BIO, MAX_IMAGE_BYTES, MAX_NAME, USERNAME_HINT, USERNAME_PATTERN } from "./limits";
 
 // Server Actions: called from Client Components, run on the server.
 // They're reachable by direct POST, so each one authenticates: api() gets the
@@ -57,35 +57,11 @@ export async function deleteMessage(messageId: string) {
 
 // ---- posts ----
 
-export interface CreatePostState {
-  error?: string;
-}
-
-// Used with useActionState: returns { error } for problems the user can fix,
-// and redirects to the new post on success.
-export async function createPost(_prev: CreatePostState, formData: FormData): Promise<CreatePostState> {
-  const images = formData.getAll("images").filter((f): f is File => f instanceof File && f.size > 0);
-  const caption = String(formData.get("caption") ?? "").trim();
-  if (images.length === 0) return { error: "Add at least one photo." };
-  if (images.length > MAX_IMAGES) return { error: `You can add up to ${MAX_IMAGES} photos.` };
-  if (images.some((f) => !f.type.startsWith("image/"))) return { error: "Only images can be uploaded." };
-  if (images.some((f) => f.size > MAX_IMAGE_BYTES)) return { error: "Each photo must be 5 MB or smaller." };
-  if (caption.length > MAX_CAPTION) return { error: "The caption is too long." };
-
-  // Rebuild the form so only the fields the API expects are sent
-  const body = new FormData();
-  images.forEach((image) => body.append("images", image, image.name));
-  body.append("caption", caption);
-
-  try {
-    await api<Post>("/api/posts", { method: "POST", body });
-  } catch (error) {
-    if (error instanceof ApiError && error.status < 500) return { error: error.message };
-    throw error;
-  }
+// After a post was uploaded straight to the API (lib/upload.ts): refresh the feed and go
+// there, where the new post is first (like Instagram). Photos don't pass through here,
+// so Vercel's 4.5 MB request limit doesn't matter.
+export async function finishPost() {
   revalidatePath("/");
-  // Back to the feed, where the new post is first (like Instagram). Redirecting to
-  // /posts/:id would open it as an overlay on top of the empty create form.
   redirect("/");
 }
 

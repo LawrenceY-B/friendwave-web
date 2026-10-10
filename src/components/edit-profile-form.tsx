@@ -2,7 +2,8 @@
 
 import type { Profile } from "@/interfaces/api";
 import { updateProfile } from "@/lib/actions";
-import { MAX_BIO, MAX_IMAGE_BYTES, MAX_NAME, USERNAME_HINT } from "@/lib/limits";
+import { AVATAR_MAX_SIDE, MAX_BIO, MAX_IMAGE_BYTES, MAX_NAME, USERNAME_HINT } from "@/lib/limits";
+import { shrinkImage } from "@/lib/resize-image";
 import { Camera } from "lucide-react";
 import Link from "next/link";
 import { useActionState, useEffect, useMemo, useState } from "react";
@@ -30,12 +31,15 @@ export function EditProfileForm({ profile }: { profile: Profile }) {
   };
   const hasChanges = Object.keys(changes).length > 0 || avatar !== null;
 
-  function pickAvatar(file: File | undefined) {
+  async function pickAvatar(file: File | undefined) {
     if (!file) return;
     if (!file.type.startsWith("image/")) return setPickError("Choose an image file.");
-    if (file.size > MAX_IMAGE_BYTES) return setPickError("Your picture must be 5 MB or smaller.");
+    // Shrunk in the browser first: a camera photo becomes ~100 KB, so it fits easily
+    // through the Server Action (Vercel caps requests at 4.5 MB)
+    const small = await shrinkImage(file, AVATAR_MAX_SIDE);
+    if (small.size > MAX_IMAGE_BYTES) return setPickError("That picture couldn't be made small enough (max 5 MB).");
     setPickError(null);
-    setAvatar(file);
+    setAvatar(small);
   }
 
   function submit() {
@@ -62,7 +66,7 @@ export function EditProfileForm({ profile }: { profile: Profile }) {
             accept="image/*"
             className="sr-only"
             onChange={(e) => {
-              pickAvatar(e.target.files?.[0]);
+              void pickAvatar(e.target.files?.[0]);
               e.target.value = "";
             }}
           />

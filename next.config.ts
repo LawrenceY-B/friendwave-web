@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
-// Posts can have up to 10 images of 5 MB each (the API's limits), plus multipart overhead
-const UPLOAD_LIMIT = "52mb";
+// Post photos upload straight from the browser to the API (lib/upload.ts), so the
+// only file passing through Next is a profile picture, shrunk to ~100 KB in the browser.
+// 6 MB leaves room for an un-shrinkable original (max 5 MB). On Vercel the hard cap
+// is 4.5 MB per request whatever this says.
+const UPLOAD_LIMIT = "6mb";
 
 const nextConfig: NextConfig = {
   // Lets tests build a separate copy (e.g. NEXT_DIST_DIR=.next-test) without touching .next

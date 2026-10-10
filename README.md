@@ -101,9 +101,10 @@ src/
   plus a caption. Wrong types and oversized files are skipped with a message before anything uploads.
   The form uses `useActionState` with the `createPost` Server Action, which forwards the photos to the API
   and returns you to the feed, where the new post is first.
-- **Upload size:** `next.config.ts` raises two limits to 52 MB. Server Actions accept 1 MB by default,
-  and `proxy.ts` buffers only 10 MB of a request body by default. **The proxy limit cuts larger bodies off
-  silently**, which would corrupt bigger uploads.
+- **Uploads:** photos are shrunk in the browser first (`lib/resize-image.ts`: at most 1080px, JPEG; a 22 MB
+  camera photo becomes ~600 KB), then sent **straight from the browser to the API** with a progress bar
+  (`lib/upload.ts`). They don't pass through Next's server, because on Vercel every request to it is capped at
+  **4.5 MB**. Profile pictures are shrunk to 640px (~100 KB) and still go through a Server Action.
 - **Comments** (in the post overlay or page): newest first, "Load older comments", replies, and deleting. The send icon
   sits inside the input; Enter does the same.
   Delete buttons show only where the API allows it: your own comments and replies, every comment on your
