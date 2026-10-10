@@ -11,7 +11,7 @@ import { PostMenu } from "./post-menu";
 
 export function PostHeader({ post, meId }: { post: Post; meId: string }) {
   return (
-    <header className="flex items-center gap-3 px-1 py-3">
+    <header className="flex items-center gap-3 px-4 py-3">
       <Avatar user={post.author} size="sm" />
       {post.author ? (
         <Link href={`/users/${post.author.id}`} className="text-sm font-semibold hover:underline">
@@ -66,17 +66,16 @@ export function PostCaption({ post }: { post: Post }) {
 export function PostCard({ post, meId }: { post: Post; meId: string }) {
   return (
     <PostLive post={post}>
-      {/* Instagram-style: no card, just a thin line under each post */}
-      <article data-reveal className="border-b border-neutral-200 pb-3 dark:border-neutral-800">
+      {/* Instagram-style: no card, just a thin line under each post. -mx-4 cancels main's
+          padding, so photos run edge to edge across the (still centred) column. */}
+      <article data-reveal className="-mx-4 border-b border-neutral-200 pb-3 dark:border-neutral-800">
         <PostHeader post={post} meId={meId} />
-        <div className="overflow-hidden rounded-md">
-          <PostImages
-            parallax
-            images={post.images}
-            alt={post.caption || `Photo by ${post.author?.username ?? "unknown"}`}
-          />
-        </div>
-        <div className="space-y-2 px-1 pt-3">
+        <PostImages
+          parallax
+          images={post.images}
+          alt={post.caption || `Photo by ${post.author?.username ?? "unknown"}`}
+        />
+        <div className="space-y-2 px-4 pt-3">
           <PostCounts post={post} />
           <PostCaption post={post} />
         </div>
