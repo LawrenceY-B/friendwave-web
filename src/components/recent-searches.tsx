@@ -21,7 +21,7 @@ export function RecentSearches() {
       </div>
       <ul className="-mx-3">
         {recent.map((user) => (
-          <li key={user.id} className="flex items-center gap-3 p-3">
+          <li key={user.id} data-reveal className="flex items-center gap-3 p-3">
             <Link href={`/users/${user.id}`} className="flex min-w-0 flex-1 items-center gap-3">
               <Avatar user={user} />
               <span className="min-w-0">

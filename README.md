@@ -79,6 +79,31 @@ src/
 - **Online:** a green dot on the picture in the chat list and the chat header when the other person has the
   app open.
 
+## Motion (GSAP + Lenis)
+
+- **Smooth scrolling:** Lenis (`components/smooth-scroll.tsx`) eases mouse-wheel and trackpad scrolling,
+  driven by GSAP's clock so scroll-linked animations stay in step. Touch screens keep native scrolling.
+  Overlays and menus freeze the page behind them with `useScrollLock()`. Inner scroll areas opt out with
+  `data-lenis-prevent`; sideways carousels with `data-lenis-prevent-horizontal`.
+- **Double tap:** a gradient heart springs in where you tapped, with a shockwave ring and flying hearts
+  (`lib/like-burst.ts`). The heart button jumps and sparks; like and comment counts roll like an odometer.
+- **Everywhere else** (`components/motion-effects.tsx` and the components themselves):
+  - anything marked `data-reveal` slides in the first time it scrolls into view, including rows that
+    arrive live
+  - pages cross-fade
+  - the header hides while you scroll down and returns when you scroll up
+  - feed photos drift slightly as they pass (parallax)
+  - the post overlay zooms in and out
+  - menus spring up
+  - the bell rings when something new arrives
+  - "New posts" bounces in
+  - the bottom bar's glass lens glides between tabs
+  - unseen story rings spin
+  - stories open like a portal and swing between posts in 3D
+- **Reduced motion:** with "Reduce motion" on in the device settings, all of this is off (no smooth
+  scrolling, nothing hidden waiting to animate). Import GSAP from `@/lib/motion`, which registers the
+  plugins and exports `reducedMotion()`.
+
 ## Live chat (`src/components/chat-room.tsx`)
 
 - The page loads the chat and its latest 30 messages on the server, then the browser keeps them live.

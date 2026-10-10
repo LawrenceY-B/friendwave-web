@@ -135,7 +135,7 @@ export function Comments({ postId, postAuthorId, meId, comments, nextCursor }: P
         {shown.map((comment) => {
           const canDelete = comment.author?.id === meId || postAuthorId === meId;
           return (
-            <li key={comment.id} className="space-y-2">
+            <li key={comment.id} data-reveal className="space-y-2">
               <div className="group flex gap-3">
                 <Avatar user={comment.author} size="sm" />
                 <div className="min-w-0 flex-1 text-sm">
@@ -163,7 +163,7 @@ export function Comments({ postId, postAuthorId, meId, comments, nextCursor }: P
               {comment.replies.length > 0 && (
                 <ul className="ml-11 space-y-2">
                   {comment.replies.map((reply) => (
-                    <li key={reply.id} className="group flex gap-3 text-sm">
+                    <li key={reply.id} data-reveal className="group flex gap-3 text-sm">
                       <Avatar user={reply.author} size="sm" />
                       <div className="min-w-0 flex-1">
                         <p>

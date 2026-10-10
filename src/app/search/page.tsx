@@ -49,7 +49,7 @@ async function Results({ searchParams }: { searchParams: PageProps<"/search">["s
     <div className="space-y-3">
       <ul className="-mx-3">
         {items.map((user) => (
-          <li key={user.id} className="flex items-center gap-3 p-3">
+          <li key={user.id} data-reveal className="flex items-center gap-3 p-3">
             {/* Opening a result adds them to "Recent" */}
             <SearchResultLink user={user} className="flex min-w-0 flex-1 items-center gap-3">
               <Avatar user={user} />

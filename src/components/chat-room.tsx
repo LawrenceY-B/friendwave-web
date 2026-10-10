@@ -183,7 +183,7 @@ export function ChatRoom({ chat, meId, initialMessages, initialCursor }: Props) 
         )}
       </header>
 
-      <ol className="flex-1 space-y-2 overflow-y-auto p-4" aria-label="Messages">
+      <ol data-lenis-prevent className="flex-1 space-y-2 overflow-y-auto p-4" aria-label="Messages">
         {cursor && (
           <li className="text-center">
             <button
@@ -202,7 +202,7 @@ export function ChatRoom({ chat, meId, initialMessages, initialCursor }: Props) 
         {messages.map((message) => {
           const mine = message.senderId === meId;
           return (
-            <li key={message.id} className={`group flex items-end gap-2 ${mine ? "flex-row-reverse" : ""}`}>
+            <li key={message.id} data-reveal className={`group flex items-end gap-2 ${mine ? "flex-row-reverse" : ""}`}>
               <div
                 className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm break-words whitespace-pre-wrap ${
                   mine ? "bg-blue-600 text-white" : "bg-neutral-100 dark:bg-neutral-800"
