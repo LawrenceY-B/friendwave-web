@@ -127,3 +127,27 @@ browser (3-30 letters, numbers, `.` or `_`) and by the API, which answers "Usern
 - **Pages are kept alive:** Next.js keeps visited pages alive in the background (React `<Activity>`), so
   components that must start fresh reset themselves when hidden: the story viewer, the new-post form after
   a successful post, and the chat room (which catches up on missed messages when it reconnects).
+
+## Deploying on Vercel
+
+1. Vercel → **Add New → Project** → import `LawrenceY-B/friendwave-web` (Next.js and pnpm are detected).
+2. **Environment variables** (Production):
+
+   | Variable | Value |
+   |---|---|
+   | `AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, `AUTH0_CLIENT_SECRET` | the Friendwave Web app in Auth0 |
+   | `AUTH0_SECRET` | a new one: `openssl rand -hex 32` |
+   | `APP_BASE_URL` | `https://<your-app>.vercel.app` |
+   | `AUTH0_AUDIENCE` | `https://api.friendwave` |
+   | `API_URL`, `NEXT_PUBLIC_API_URL` | your Render URL, e.g. `https://friendwave-api.onrender.com` |
+
+   `NEXT_PUBLIC_API_URL` is built into the browser code, so **redeploy** after changing it.
+3. **Auth0 → Friendwave Web → Settings:** add `https://<your-app>.vercel.app/auth/callback` to Allowed Callback
+   URLs, and `https://<your-app>.vercel.app` to Allowed Logout URLs and Allowed Web Origins.
+4. **Render:** set the API's `CLIENT_ORIGIN` to `https://<your-app>.vercel.app`.
+5. **Region:** `vercel.json` pins the functions to `iad1` (Washington, D.C. / AWS us-east-1), next to the API on
+   Render (`virginia`) and MongoDB Atlas (us-east-1). Every page calls the API from the server, so keeping them
+   together keeps pages fast.
+
+Preview deployments (per branch) get their own URLs; Auth0 callbacks and the API's `CLIENT_ORIGIN` only allow
+the production URL for now.
