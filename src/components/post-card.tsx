@@ -70,11 +70,7 @@ export function PostCard({ post, meId }: { post: Post; meId: string }) {
           padding, so photos run edge to edge across the (still centred) column. */}
       <article data-reveal className="-mx-4 border-b border-neutral-200 pb-3 dark:border-neutral-800">
         <PostHeader post={post} meId={meId} />
-        <PostImages
-          parallax
-          images={post.images}
-          alt={post.caption || `Photo by ${post.author?.username ?? "unknown"}`}
-        />
+        <PostImages images={post.images} alt={post.caption || `Photo by ${post.author?.username ?? "unknown"}`} />
         <div className="space-y-2 px-4 pt-3">
           <PostCounts post={post} />
           <PostCaption post={post} />

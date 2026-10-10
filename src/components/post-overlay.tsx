@@ -1,5 +1,6 @@
 "use client";
 
+import { useHideAppHeader } from "@/lib/hide-app-header";
 import { gsap, reducedMotion, useGSAP } from "@/lib/motion";
 import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -17,6 +18,7 @@ export function PostOverlay({ children }: { children: ReactNode }) {
 
   // Don't let the page behind scroll while the post is open
   useScrollLock();
+  useHideAppHeader();
 
   // In: the backdrop fades and blurs, the post rises and zooms into place
   useGSAP(() => {

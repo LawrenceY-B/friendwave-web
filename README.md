@@ -92,7 +92,6 @@ src/
     arrive live
   - pages cross-fade
   - the header hides while you scroll down and returns when you scroll up
-  - feed photos drift slightly as they pass (parallax)
   - the post overlay zooms in and out
   - menus spring up
   - the bell rings when something new arrives

@@ -3,6 +3,7 @@
 import type { StoryGroup } from "@/interfaces/api";
 import { deleteStory } from "@/lib/actions";
 import { timeAgo } from "@/lib/format";
+import { useHideAppHeader } from "@/lib/hide-app-header";
 import { gsap, reducedMotion, useGSAP } from "@/lib/motion";
 import { markStorySeen } from "@/lib/seen-stories";
 import { ChevronRight, Trash2, X } from "lucide-react";
@@ -93,6 +94,7 @@ export function StoryViewer({ groups: initialGroups, startIndex, meId }: Props) 
   const backdrop = useRef<HTMLImageElement>(null);
   const bubble = useRef<HTMLButtonElement>(null);
   useScrollLock(!hidden);
+  useHideAppHeader();
 
   // Opening: the stories open out of a circle in the middle, like a portal
   useGSAP(() => {

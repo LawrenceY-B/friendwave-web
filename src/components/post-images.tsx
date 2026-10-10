@@ -1,7 +1,7 @@
 "use client";
 
 import { likeBurst } from "@/lib/like-burst";
-import { gsap, reducedMotion, useGSAP } from "@/lib/motion";
+import { gsap, reducedMotion } from "@/lib/motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { type KeyboardEvent, type PointerEvent, useContext, useRef, useState } from "react";
@@ -12,31 +12,13 @@ const TAP_SLOP_PX = 10; // more movement than this is a swipe, not a tap
 
 // A post's photos: swipe (or scroll) sideways, or use the ‹ › buttons / ← → keys.
 // Swiping is native scroll-snap, so it feels right on touch screens and trackpads.
-export function PostImages({ images, alt, parallax = false }: { images: string[]; alt: string; parallax?: boolean }) {
+export function PostImages({ images, alt }: { images: string[]; alt: string }) {
   const track = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
   const many = images.length > 1;
   // Double tap to like (when this post's live state is available)
   const live = useContext(PostLiveContext);
   const frame = useRef<HTMLDivElement>(null);
-
-  // In the feed, photos drift slightly as they scroll past (a touch of depth)
-  useGSAP(
-    () => {
-      if (!parallax || reducedMotion()) return;
-      gsap.fromTo(
-        "img",
-        { scale: 1.12, yPercent: -4 },
-        {
-          scale: 1,
-          yPercent: 4,
-          ease: "none",
-          scrollTrigger: { trigger: frame.current, start: "top bottom", end: "bottom top", scrub: 0.6 },
-        }
-      );
-    },
-    { scope: frame, dependencies: [parallax, images.length] }
-  );
   const down = useRef<{ x: number; y: number; t: number } | null>(null);
   const lastTap = useRef<{ x: number; y: number; t: number } | null>(null);
 

@@ -1,8 +1,8 @@
 import { NewPostsPill } from "@/components/new-posts-pill";
+import { FeedGate } from "@/components/onboarding-suggestions";
 import { PostCard } from "@/components/post-card";
 import { PostSkeleton } from "@/components/post-skeleton";
 import { StoriesBar } from "@/components/stories-bar";
-import { Suggestions } from "@/components/suggestions";
 import type { Post, Profile, StoryGroup, Suggestion } from "@/interfaces/api";
 import { api, apiPage } from "@/lib/api";
 import { getSession } from "@/lib/session";
@@ -37,33 +37,34 @@ async function Home({ searchParams }: { searchParams: PageProps<"/">["searchPara
       {/* "↑ New posts" when someone you follow posts while you're here */}
       {!query && <NewPostsPill />}
       {stories && <StoriesBar groups={stories} meId={me.id} />}
-      {items.length === 0 ? (
-        query ? (
-          <p className="py-20 text-center text-neutral-500">No more posts.</p>
+      {/* A brand-new user with an empty feed picks people to follow first (FeedGate) */}
+      <FeedGate startEmpty={items.length === 0 && !query} suggestions={suggestions ?? []}>
+        {items.length === 0 ? (
+          query ? (
+            <p className="py-20 text-center text-neutral-500">No more posts.</p>
+          ) : (
+            <div className="space-y-4 py-6">
+              <p className="text-center text-neutral-500">
+                Your feed is empty.{" "}
+                <Link href="/search" className="text-blue-600 hover:underline">
+                  Find people to follow
+                </Link>
+                .
+              </p>
+            </div>
+          )
         ) : (
-          // Nothing to show yet: suggest people to follow
-          <div className="space-y-4 py-6">
-            <p className="text-center text-neutral-500">
-              Your feed is empty.{" "}
-              <Link href="/search" className="text-blue-600 hover:underline">
-                Find people to follow
-              </Link>
-              .
-            </p>
-            <Suggestions suggestions={suggestions ?? []} />
-          </div>
-        )
-      ) : (
-        items.map((post) => <PostCard key={post.id} post={post} meId={me.id} />)
-      )}
-      {nextCursor && (
-        <Link
-          href={`/?cursor=${nextCursor}`}
-          className="block rounded-lg border border-neutral-200 py-2 text-center text-sm hover:bg-neutral-100 dark:border-neutral-800 dark:hover:bg-neutral-900"
-        >
-          Older posts
-        </Link>
-      )}
+          items.map((post) => <PostCard key={post.id} post={post} meId={me.id} />)
+        )}
+        {nextCursor && (
+          <Link
+            href={`/?cursor=${nextCursor}`}
+            className="block rounded-lg border border-neutral-200 py-2 text-center text-sm hover:bg-neutral-100 dark:border-neutral-800 dark:hover:bg-neutral-900"
+          >
+            Older posts
+          </Link>
+        )}
+      </FeedGate>
     </div>
   );
 }

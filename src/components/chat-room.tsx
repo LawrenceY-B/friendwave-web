@@ -2,6 +2,7 @@
 
 import type { Chat, Message } from "@/interfaces/api";
 import { deleteMessage, loadMessages, sendMessage } from "@/lib/actions";
+import { useHideAppHeader } from "@/lib/hide-app-header";
 import { gsap, reducedMotion, useGSAP } from "@/lib/motion";
 import { ArrowLeft, Check, ChevronDown, Clock3, SendHorizontal, Trash2 } from "lucide-react";
 import Link from "next/link";
@@ -196,6 +197,7 @@ export function ChatRoom({ chat, meId, initialMessages, initialCursor }: Props) 
 
   // ---- full screen, Telegram-style ----
   useScrollLock(); // the page underneath stays put
+  useHideAppHeader();
   const mounted = useMounted();
   const scroller = useRef<HTMLDivElement>(null);
   const nearBottom = useRef(true);

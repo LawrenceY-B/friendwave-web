@@ -7,7 +7,17 @@ import { useOptimistic, useRef, useState, useTransition } from "react";
 // Flips instantly (optimistic), then keeps what the server confirmed. Keeping the
 // confirmed value locally matters on pages the action doesn't re-render (e.g. search
 // results): useOptimistic alone falls back to the original prop once the request ends.
-export function FollowButton({ userId, isFollowing }: { userId: string; isFollowing: boolean }) {
+export function FollowButton({
+  userId,
+  isFollowing,
+  refresh = true,
+  onChange,
+}: {
+  userId: string;
+  isFollowing: boolean;
+  refresh?: boolean; // false: don't re-render the page (see setFollowing)
+  onChange?: (following: boolean) => void;
+}) {
   const [confirmed, setConfirmed] = useState(isFollowing);
   const [following, setOptimistic] = useOptimistic(confirmed);
   const [pending, startTransition] = useTransition();
@@ -22,8 +32,9 @@ export function FollowButton({ userId, isFollowing }: { userId: string; isFollow
         .to(button.current, { scale: 1, duration: 0.6, ease: "elastic.out(1.3, 0.4)" });
     startTransition(async () => {
       setOptimistic(!following);
-      const result = await setFollowing(userId, !following);
+      const result = await setFollowing(userId, !following, { refresh });
       setConfirmed(result.following);
+      onChange?.(result.following);
     });
   };
 
