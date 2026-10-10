@@ -7,5 +7,9 @@ export async function proxy(request: Request) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)"],
+  // Static files and the installable-app files (manifest, service worker, icons, offline page)
+  // don't need the session
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|manifest.webmanifest|sw.js|pwa-icon|icon|apple-icon|offline).*)",
+  ],
 };

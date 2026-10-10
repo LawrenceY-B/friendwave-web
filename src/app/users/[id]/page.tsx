@@ -1,6 +1,7 @@
 import { Avatar } from "@/components/avatar";
 import { BackButton } from "@/components/back-button";
 import { FollowingMenu } from "@/components/following-menu";
+import { PageTitle } from "@/components/page-title";
 import { PeopleSheet } from "@/components/people-sheet";
 import type { Post, Profile, StoryGroup } from "@/interfaces/api";
 import { openChat } from "@/lib/actions";
@@ -44,7 +45,9 @@ async function ProfileView({ params }: { params: PageProps<"/users/[id]">["param
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
+      {/* Phones: the username (and Back, unless it's you) go in the header */}
+      <PageTitle title={profile.username} back={!profile.isMe} />
+      <div className="hidden items-center gap-2 sm:flex">
         <BackButton />
         <h1 className="truncate text-xl font-semibold">{profile.username}</h1>
       </div>

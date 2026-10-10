@@ -1,11 +1,12 @@
+import { HeaderTitle } from "@/components/header-title";
 import { MotionEffects } from "@/components/motion-effects";
 import { NavigationTracker } from "@/components/navigation-tracker";
 import { RealtimeProvider } from "@/components/realtime-provider";
+import { ServiceWorker } from "@/components/service-worker";
 import { SmoothScroll } from "@/components/smooth-scroll";
 import { MobileNav, UserMenu } from "@/components/user-menu";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Link from "next/link";
 import { Suspense } from "react";
 import "./globals.css";
 
@@ -22,6 +23,19 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Friendwave",
   description: "Connect with friends and share moments.",
+  applicationName: "Friendwave",
+  // Installed on an iPhone home screen: full screen, named "Friendwave"
+  appleWebApp: { capable: true, title: "Friendwave", statusBarStyle: "default" },
+};
+
+// The browser/phone status bar matches the header; "cover" lets the installed app use the
+// whole screen (the header, bottom bar and chat pad themselves with the safe-area insets)
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+  ],
+  viewportFit: "cover",
 };
 
 // `modal` is the slot app/@modal renders into: a post opened on top of the current page
@@ -39,12 +53,10 @@ export default function RootLayout({ children, modal }: LayoutProps<"/">) {
             </Suspense>
             <header
               data-app-header
-              className="sticky top-0 z-10 border-b border-neutral-200 bg-white/80 backdrop-blur dark:border-neutral-800 dark:bg-black/80"
+              className="sticky top-0 z-10 border-b border-neutral-200 bg-white/80 pt-[env(safe-area-inset-top)] backdrop-blur dark:border-neutral-800 dark:bg-black/80"
             >
               <div className="mx-auto flex h-14 max-w-xl items-center justify-between px-4">
-                <Link href="/" className="text-lg font-bold tracking-tight">
-                  Friendwave
-                </Link>
+                <HeaderTitle />
                 {/* The menu reads the session, so it streams in; the rest of the header is static */}
                 <Suspense
                   fallback={<div className="h-8 w-24 animate-pulse rounded-full bg-neutral-200 dark:bg-neutral-800" />}
@@ -59,6 +71,7 @@ export default function RootLayout({ children, modal }: LayoutProps<"/">) {
               <MobileNav />
             </Suspense>
             {modal}
+            <ServiceWorker />
           </SmoothScroll>
         </RealtimeProvider>
       </body>
