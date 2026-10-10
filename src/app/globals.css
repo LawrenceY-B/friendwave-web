@@ -90,12 +90,12 @@
   background: conic-gradient(from var(--ring-angle), #fbbf24, #ec4899, #9333ea, #ec4899, #fbbf24);
 }
 
-/* The chat room's wallpaper (components/chat-room.tsx): a soft gradient */
+/* The chat room's background (components/chat-room.tsx): plain, following the light/dark theme */
 .chat-wallpaper {
-  background: linear-gradient(160deg, #dbeafe 0%, #e0e7ff 45%, #ede9fe 100%);
+  background: #f5f5f5;
 }
 @media (prefers-color-scheme: dark) {
   .chat-wallpaper {
-    background: linear-gradient(160deg, #0b1224 0%, #1e1b4b 60%, #2e1065 100%);
+    background: #0a0a0a;
   }
 }
