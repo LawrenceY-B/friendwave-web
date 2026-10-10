@@ -1,10 +1,10 @@
 "use server";
 
-import type { Chat, Comment, Message, Profile, UserSummary } from "@/interfaces/api";
+import type { Chat, Comment, Message, Notification, Profile, UserSummary } from "@/interfaces/api";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { api, ApiError, apiPage } from "./api";
-import { MAX_BIO, MAX_IMAGE_BYTES, MAX_NAME, USERNAME_HINT, USERNAME_PATTERN } from "./limits";
+import { MAX_BIO, MAX_IMAGE_BYTES, MAX_NAME, NOTIFICATIONS_PAGE, USERNAME_HINT, USERNAME_PATTERN } from "./limits";
 
 // Server Actions: called from Client Components, run on the server.
 // They're reachable by direct POST, so each one authenticates: api() gets the
@@ -175,4 +175,16 @@ export async function deleteStory(storyId: string) {
 export async function listPeople(userId: string, which: "followers" | "following") {
   if (!isId(userId) || (which !== "followers" && which !== "following")) throw new Error("Invalid request");
   return (await apiPage<UserSummary>(`/api/users/${userId}/${which}?limit=50`)).items;
+}
+
+// ---- notifications ----
+
+export async function markNotificationsRead() {
+  await api("/api/notifications/read", { method: "POST" });
+}
+
+// The next 10 for "See all" on the notifications page
+export async function loadNotifications(cursor: string) {
+  if (!isId(cursor)) throw new Error("Invalid id");
+  return apiPage<Notification>(`/api/notifications?limit=${NOTIFICATIONS_PAGE}&cursor=${cursor}`);
 }

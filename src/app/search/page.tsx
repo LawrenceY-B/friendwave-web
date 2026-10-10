@@ -1,8 +1,10 @@
 import { Avatar } from "@/components/avatar";
 import { FollowButton } from "@/components/follow-button";
+import { RecentSearches, SearchResultLink } from "@/components/recent-searches";
 import { SearchBox } from "@/components/search-box";
-import type { UserSearchResult } from "@/interfaces/api";
-import { apiPage } from "@/lib/api";
+import { Suggestions } from "@/components/suggestions";
+import type { Suggestion, UserSearchResult } from "@/interfaces/api";
+import { api, apiPage } from "@/lib/api";
 import Link from "next/link";
 import { Suspense } from "react";
 
@@ -24,7 +26,14 @@ async function Results({ searchParams }: { searchParams: PageProps<"/search">["s
   const { q, cursor } = await searchParams;
   const query = typeof q === "string" ? q.trim().slice(0, 50) : "";
   if (!query) {
-    return <p className="py-12 text-center text-sm text-neutral-500">Find people by username or name.</p>;
+    // Nothing typed yet: recent searches (this browser) and people to follow
+    const suggestions = await api<Suggestion[]>("/api/users/suggestions?limit=10");
+    return (
+      <div className="space-y-6">
+        <RecentSearches />
+        <Suggestions suggestions={suggestions} />
+      </div>
+    );
   }
 
   const after = typeof cursor === "string" && /^[0-9a-f]{24}$/.test(cursor) ? `&cursor=${cursor}` : "";
@@ -38,16 +47,17 @@ async function Results({ searchParams }: { searchParams: PageProps<"/search">["s
 
   return (
     <div className="space-y-3">
-      <ul className="divide-y divide-neutral-200 overflow-hidden rounded-xl border border-neutral-200 bg-white dark:divide-neutral-800 dark:border-neutral-800 dark:bg-neutral-950">
+      <ul className="-mx-3">
         {items.map((user) => (
           <li key={user.id} className="flex items-center gap-3 p-3">
-            <Link href={`/users/${user.id}`} className="flex min-w-0 flex-1 items-center gap-3">
+            {/* Opening a result adds them to "Recent" */}
+            <SearchResultLink user={user} className="flex min-w-0 flex-1 items-center gap-3">
               <Avatar user={user} />
               <span className="min-w-0">
                 <span className="block truncate font-medium">{user.username}</span>
                 <span className="block truncate text-sm text-neutral-500">{user.name}</span>
               </span>
-            </Link>
+            </SearchResultLink>
             {user.isMe ? (
               <span className="text-sm text-neutral-500">You</span>
             ) : (

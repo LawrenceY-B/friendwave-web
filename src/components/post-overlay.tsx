@@ -6,6 +6,7 @@ import { type ReactNode, useEffect } from "react";
 
 // The frame around a post opened on top of another page. Closing it goes back
 // in history, so you land exactly where you were (same page, same scroll).
+// z-[60]: above the story viewer (z-50), which "See post" opens it over.
 export function PostOverlay({ children }: { children: ReactNode }) {
   const router = useRouter();
 
@@ -26,7 +27,7 @@ export function PostOverlay({ children }: { children: ReactNode }) {
 
   return (
     <div
-      className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 sm:p-6"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 sm:p-6"
       onClick={(e) => e.target === e.currentTarget && router.back()}
     >
       <button

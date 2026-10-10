@@ -79,3 +79,35 @@
     background: var(--background);
   }
 }
+
+/* Double-tap like (components/post-images.tsx): the heart pops in, then fades */
+@keyframes heart-pop {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+  }
+  15% {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 1;
+  }
+  30% {
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+  45%,
+  70% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0;
+  }
+}
+.heart-pop {
+  animation: heart-pop 900ms ease-out forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .heart-pop {
+    animation-duration: 1ms;
+  }
+}

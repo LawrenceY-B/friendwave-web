@@ -1,7 +1,9 @@
+import { NewPostsPill } from "@/components/new-posts-pill";
 import { PostCard } from "@/components/post-card";
 import { PostSkeleton } from "@/components/post-skeleton";
 import { StoriesBar } from "@/components/stories-bar";
-import type { Post, Profile, StoryGroup } from "@/interfaces/api";
+import { Suggestions } from "@/components/suggestions";
+import type { Post, Profile, StoryGroup, Suggestion } from "@/interfaces/api";
 import { api, apiPage } from "@/lib/api";
 import { auth0 } from "@/lib/auth0";
 import Link from "next/link";
@@ -28,24 +30,29 @@ async function Home({ searchParams }: { searchParams: PageProps<"/">["searchPara
     query ? null : api<StoryGroup[]>("/api/stories"),
     api<Profile>("/api/users/me"),
   ]);
+  const suggestions = items.length === 0 && !query ? await api<Suggestion[]>("/api/users/suggestions?limit=10") : null;
 
   return (
     <div className="space-y-6">
+      {/* "↑ New posts" when someone you follow posts while you're here */}
+      {!query && <NewPostsPill />}
       {stories && <StoriesBar groups={stories} meId={me.id} />}
       {items.length === 0 ? (
-        <p className="py-20 text-center text-neutral-500">
-          {query ? (
-            "No more posts."
-          ) : (
-            <>
+        query ? (
+          <p className="py-20 text-center text-neutral-500">No more posts.</p>
+        ) : (
+          // Nothing to show yet: suggest people to follow
+          <div className="space-y-4 py-6">
+            <p className="text-center text-neutral-500">
               Your feed is empty.{" "}
               <Link href="/search" className="text-blue-600 hover:underline">
                 Find people to follow
               </Link>
               .
-            </>
-          )}
-        </p>
+            </p>
+            <Suggestions suggestions={suggestions ?? []} />
+          </div>
+        )
       ) : (
         items.map((post) => <PostCard key={post.id} post={post} meId={me.id} />)
       )}

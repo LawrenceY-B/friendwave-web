@@ -5,6 +5,7 @@ import { House, LogOut, type LucideIcon, MessageCircle, Search, SquarePlus } fro
 import Link from "next/link";
 import { Avatar } from "./avatar";
 import { BottomNav } from "./bottom-nav";
+import { NotificationBell } from "./notification-bell";
 
 // Reads the session, so it must render inside <Suspense> (see layout.tsx)
 export async function UserMenu() {
@@ -22,7 +23,7 @@ export async function UserMenu() {
     );
   }
 
-  const me = await loadMe();
+  const [me, unread] = await Promise.all([loadMe(), loadUnread()]);
   if (!me) {
     // The API is down: keep the header usable instead of crashing the whole page
     return (
@@ -45,6 +46,8 @@ export async function UserMenu() {
         <NavIcon href="/create" label="New post" icon={SquarePlus} />
         <NavIcon href="/chats" label="Chats" icon={MessageCircle} />
       </div>
+      {/* Bell stays in the header on phones too (the bottom bar keeps its 4 tabs) */}
+      <NotificationBell initialUnread={unread} />
       <Link href={`/users/${me.id}`} aria-label="Your profile" title="Your profile" className="ml-1 rounded-full p-1">
         <Avatar user={me} size="sm" />
       </Link>
@@ -87,4 +90,12 @@ async function loadMe() {
 export async function MobileNav() {
   const session = await auth0.getSession();
   return session ? <BottomNav /> : null;
+}
+
+async function loadUnread() {
+  try {
+    return (await api<{ count: number }>("/api/notifications/unread-count")).count;
+  } catch {
+    return 0; // the bell still works live; the count catches up on the next page load
+  }
 }

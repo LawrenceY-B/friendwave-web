@@ -1,17 +1,17 @@
 import type { Post } from "@/interfaces/api";
-import { plural, timeAgo } from "@/lib/format";
-import { MessageCircle } from "lucide-react";
+import { timeAgo } from "@/lib/format";
 import Link from "next/link";
 import { Avatar } from "./avatar";
-import { LikeButton } from "./like-button";
+import { CommentCountLink, LikeButton } from "./like-button";
 import { PostImages } from "./post-images";
+import { PostLiveProvider } from "./post-live";
 import { PostMenu } from "./post-menu";
 
 // The pieces of a post, also used side by side in the post overlay (post-detail.tsx)
 
 export function PostHeader({ post, meId }: { post: Post; meId: string }) {
   return (
-    <header className="flex items-center gap-3 p-3">
+    <header className="flex items-center gap-3 px-1 py-3">
       <Avatar user={post.author} size="sm" />
       {post.author ? (
         <Link href={`/users/${post.author.id}`} className="text-sm font-semibold hover:underline">
@@ -29,19 +29,27 @@ export function PostHeader({ post, meId }: { post: Post; meId: string }) {
   );
 }
 
+// Must be inside <PostLive> (counts are shared and live)
 export function PostCounts({ post }: { post: Post }) {
   return (
     <div className="flex items-center gap-4">
-      <LikeButton postId={post.id} initial={{ liked: post.likedByMe, likeCount: post.likeCount }} />
-      <Link
-        href={`/posts/${post.id}`}
-        aria-label={`${plural(post.commentCount, "comment")}, open comments`}
-        className="flex items-center gap-1.5 text-sm hover:opacity-70"
-      >
-        <MessageCircle className="size-6" />
-        <span data-testid="comment-count">{post.commentCount.toLocaleString("en")}</span>
-      </Link>
+      <LikeButton />
+      <CommentCountLink postId={post.id} />
     </div>
+  );
+}
+
+// Wraps a post's pieces with its shared, live like/comment state
+export function PostLive({ post, children }: { post: Post; children: React.ReactNode }) {
+  return (
+    <PostLiveProvider
+      postId={post.id}
+      liked={post.likedByMe}
+      likeCount={post.likeCount}
+      commentCount={post.commentCount}
+    >
+      {children}
+    </PostLiveProvider>
   );
 }
 
@@ -57,13 +65,18 @@ export function PostCaption({ post }: { post: Post }) {
 
 export function PostCard({ post, meId }: { post: Post; meId: string }) {
   return (
-    <article className="overflow-hidden rounded-xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950">
-      <PostHeader post={post} meId={meId} />
-      <PostImages images={post.images} alt={post.caption || `Photo by ${post.author?.username ?? "unknown"}`} />
-      <div className="space-y-2 p-3">
-        <PostCounts post={post} />
-        <PostCaption post={post} />
-      </div>
-    </article>
+    <PostLive post={post}>
+      {/* Instagram-style: no card, just a thin line under each post */}
+      <article className="border-b border-neutral-200 pb-3 dark:border-neutral-800">
+        <PostHeader post={post} meId={meId} />
+        <div className="overflow-hidden rounded-md">
+          <PostImages images={post.images} alt={post.caption || `Photo by ${post.author?.username ?? "unknown"}`} />
+        </div>
+        <div className="space-y-2 px-1 pt-3">
+          <PostCounts post={post} />
+          <PostCaption post={post} />
+        </div>
+      </article>
+    </PostLive>
   );
 }
