@@ -1,6 +1,8 @@
 "use client";
 
+import { loadUnreadNotificationCount } from "@/lib/actions";
 import { gsap, reducedMotion, useGSAP } from "@/lib/motion";
+import { useCatchUp } from "@/lib/use-catch-up";
 import { Bell } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -16,6 +18,10 @@ export function NotificationBell({ initialUnread }: { initialUnread: number }) {
   const dot = useRef<HTMLSpanElement>(null);
   const previous = useRef(initialUnread);
   useSocketEvent("notification:new", () => setUnread((n) => n + 1));
+  // Notifications that arrived while the app was in the background
+  useCatchUp(() => {
+    loadUnreadNotificationCount().then(setUnread, () => {});
+  });
 
   // Something new: the bell swings from the top, then the dot pops
   useGSAP(

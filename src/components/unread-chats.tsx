@@ -1,8 +1,10 @@
 "use client";
 
 import type { Message } from "@/interfaces/api";
+import { loadUnreadChatIds } from "@/lib/actions";
 import { gsap, reducedMotion, useGSAP } from "@/lib/motion";
 import { addUnreadChat, markChatSeen, seedUnreadChats, useUnreadChatIds } from "@/lib/unread-chats";
+import { useCatchUp } from "@/lib/use-catch-up";
 import { MessageCircle } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -24,6 +26,12 @@ export function UnreadChatsSync({ initialIds, meId }: { initialIds: string[]; me
     if (message.senderId !== meId && pathname !== `/chats/${message.chatId}`) addUnreadChat(message.chatId);
   });
   useSocketEvent<{ chatId: string }>("chat:read", ({ chatId }) => markChatSeen(chatId));
+  // Messages that arrived while the app was in the background (no live connection then)
+  useCatchUp(() => {
+    loadUnreadChatIds()
+      .then((ids) => seedUnreadChats(ids.filter((id) => pathname !== `/chats/${id}`)))
+      .catch(() => {});
+  });
   return null;
 }
 
