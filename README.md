@@ -138,7 +138,8 @@ src/
 - **Photos:** swipe, or use ‹ ›, with dots showing which photo you're on (`components/post-images.tsx`).
   In the feed they run edge to edge across the centred column, with square corners. The header and the
   likes/caption rows are padded instead.
-- **Phones get a bottom tab bar** (`components/bottom-nav.tsx`): Feed, Search, New post and Chats in a floating
+- **Phones get a bottom tab bar** (`components/bottom-nav.tsx`): five tabs like Instagram (Feed, Search, New post
+  in the middle, Chats, and your profile picture; the header keeps the bell and log out) in a floating
   "liquid glass" pill (translucent, blurs and tints from what scrolls behind it; a glass lens marks the current tab).
   It goes solid if "Reduce transparency" is on, and hides inside a conversation and in the story viewer. From `sm:` up
   these icons stay in the header.

@@ -3,6 +3,7 @@ import { api, ApiError } from "@/lib/api";
 import { auth0 } from "@/lib/auth0";
 import { House, LogOut, type LucideIcon, MessageCircle, Search, SquarePlus } from "lucide-react";
 import Link from "next/link";
+import { cache } from "react";
 import { Avatar } from "./avatar";
 import { BottomNav } from "./bottom-nav";
 import { NotificationBell } from "./notification-bell";
@@ -46,9 +47,14 @@ export async function UserMenu() {
         <NavIcon href="/create" label="New post" icon={SquarePlus} />
         <NavIcon href="/chats" label="Chats" icon={MessageCircle} />
       </div>
-      {/* Bell stays in the header on phones too (the bottom bar keeps its 4 tabs) */}
+      {/* The bell stays in the header on phones too; your profile moves to the bottom bar */}
       <NotificationBell initialUnread={unread} />
-      <Link href={`/users/${me.id}`} aria-label="Your profile" title="Your profile" className="ml-1 rounded-full p-1">
+      <Link
+        href={`/users/${me.id}`}
+        aria-label="Your profile"
+        title="Your profile"
+        className="ml-1 hidden rounded-full p-1 sm:block"
+      >
         <Avatar user={me} size="sm" />
       </Link>
       <LogoutLink />
@@ -76,20 +82,23 @@ function LogoutLink() {
   );
 }
 
-async function loadMe() {
+// cache(): the header and the bottom bar both need you; one API call per request
+const loadMe = cache(async () => {
   try {
     return await api<Profile>("/api/users/me");
   } catch (error) {
     if (error instanceof ApiError && error.status === 503) return null;
     throw error;
   }
-}
+});
 
 // The phone bottom bar, only for logged-in users. Rendered outside the header:
 // the header's backdrop-blur would otherwise pin a `fixed` child to the header.
 export async function MobileNav() {
   const session = await auth0.getSession();
-  return session ? <BottomNav /> : null;
+  if (!session) return null;
+  const me = await loadMe().catch(() => null);
+  return <BottomNav me={me && { id: me.id, username: me.username, name: me.name, avatarUrl: me.avatarUrl }} />;
 }
 
 async function loadUnread() {
