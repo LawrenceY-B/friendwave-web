@@ -18,7 +18,8 @@ export function StoriesBar({ groups, meId }: { groups: StoryGroup[]; meId: strin
     () => {
       if (reducedMotion()) return;
       gsap.from("li", { scale: 0.4, opacity: 0, y: 10, duration: 0.6, stagger: 0.06, ease: "back.out(2.2)" });
-      gsap.to("[data-ring='new']", { "--ring-angle": "360deg", duration: 3.5, ease: "none", repeat: -1 });
+      const unseen = bar.current?.querySelectorAll("[data-ring='new']");
+      if (unseen?.length) gsap.to(unseen, { "--ring-angle": "360deg", duration: 3.5, ease: "none", repeat: -1 });
     },
     { scope: bar, dependencies: [groups.length, seen?.size], revertOnUpdate: true }
   );

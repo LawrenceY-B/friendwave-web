@@ -1,6 +1,6 @@
 import { NewPostForm } from "@/components/new-post-form";
 import { PageTitle } from "@/components/page-title";
-import { auth0 } from "@/lib/auth0";
+import { getSession } from "@/lib/session";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
@@ -21,7 +21,7 @@ export default function NewPostPage() {
 
 // Sends logged-out visitors to log in, then back here
 async function RequireLogin({ children }: { children: React.ReactNode }) {
-  const session = await auth0.getSession();
+  const session = await getSession();
   if (!session) redirect("/auth/login?returnTo=/create");
   return children;
 }

@@ -5,7 +5,7 @@ import { StoriesBar } from "@/components/stories-bar";
 import { Suggestions } from "@/components/suggestions";
 import type { Post, Profile, StoryGroup, Suggestion } from "@/interfaces/api";
 import { api, apiPage } from "@/lib/api";
-import { auth0 } from "@/lib/auth0";
+import { getSession } from "@/lib/session";
 import Link from "next/link";
 import { Suspense } from "react";
 
@@ -19,7 +19,7 @@ export default function HomePage({ searchParams }: PageProps<"/">) {
 
 // Logged out: landing page. Logged in: your feed.
 async function Home({ searchParams }: { searchParams: PageProps<"/">["searchParams"] }) {
-  const session = await auth0.getSession();
+  const session = await getSession();
   if (!session) return <Landing />;
 
   const { cursor } = await searchParams;
