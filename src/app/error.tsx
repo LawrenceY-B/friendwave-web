@@ -13,13 +13,23 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
       ) : (
         <p className="text-sm text-neutral-500">Please try again in a moment.</p>
       )}
-      <button
-        type="button"
-        onClick={reset}
-        className="rounded-full border border-neutral-300 px-4 py-1.5 text-sm dark:border-neutral-700"
-      >
-        Try again
-      </button>
+      <div className="flex justify-center gap-3">
+        <button
+          type="button"
+          onClick={reset}
+          className="rounded-full border border-neutral-300 px-4 py-1.5 text-sm dark:border-neutral-700"
+        >
+          Try again
+        </button>
+        {/* Always a way out, even if the problem is your login */}
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- Auth0 routes (proxy.ts) need a full page load */}
+        <a
+          href="/auth/logout"
+          className="rounded-full border border-neutral-300 px-4 py-1.5 text-sm dark:border-neutral-700"
+        >
+          Log out
+        </a>
+      </div>
     </div>
   );
 }
