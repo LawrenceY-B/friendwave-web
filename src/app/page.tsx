@@ -1,3 +1,4 @@
+import { Landing } from "@/components/landing/landing";
 import { NewPostsPill } from "@/components/new-posts-pill";
 import { FeedGate } from "@/components/onboarding-suggestions";
 import { PostCard } from "@/components/post-card";
@@ -66,31 +67,6 @@ async function Home({ searchParams }: { searchParams: PageProps<"/">["searchPara
         )}
       </FeedGate>
     </div>
-  );
-}
-
-function Landing() {
-  return (
-    <section className="flex flex-col items-center gap-6 py-24 text-center">
-      <h1 className="text-4xl font-bold tracking-tight">Friendwave</h1>
-      <p className="max-w-sm text-neutral-600 dark:text-neutral-400">Connect with friends and share moments.</p>
-      <div className="flex gap-3">
-        {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- Auth0 routes (proxy.ts) need a full page load */}
-        <a
-          href="/auth/login"
-          className="rounded-full bg-neutral-900 px-5 py-2 font-medium text-white dark:bg-white dark:text-neutral-900"
-        >
-          Log in
-        </a>
-        {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- Auth0 routes (proxy.ts) need a full page load */}
-        <a
-          href="/auth/login?screen_hint=signup"
-          className="rounded-full border border-neutral-300 px-5 py-2 font-medium dark:border-neutral-700"
-        >
-          Sign up
-        </a>
-      </div>
-    </section>
   );
 }
 
