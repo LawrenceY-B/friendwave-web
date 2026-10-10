@@ -212,3 +212,16 @@ export async function loadNotifications(cursor: string) {
   if (!isId(cursor)) throw new Error("Invalid id");
   return apiPage<Notification>(`/api/notifications?limit=${NOTIFICATIONS_PAGE}&cursor=${cursor}`);
 }
+
+// ---- account ----
+
+// Deletes your account and everything of yours. `confirm` must be your username.
+// The page then logs you out (a full page load to /auth/logout).
+export async function deleteAccount(confirm: string): Promise<{ error?: string }> {
+  try {
+    await api("/api/users/me", { method: "DELETE", body: JSON.stringify({ confirm }) });
+    return {};
+  } catch (error) {
+    return { error: error instanceof ApiError ? error.message : "Couldn't delete your account. Try again." };
+  }
+}

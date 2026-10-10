@@ -67,7 +67,9 @@ export function ChatList({ chats: initialChats, meId }: { chats: Chat[]; meId: s
                 <p
                   className={`truncate text-sm ${unread ? "font-medium text-neutral-900 dark:text-white" : "text-neutral-500"}`}
                 >
-                  {last ? `${last.senderId === meId ? "You: " : ""}${last.text}` : "No messages yet"}
+                  {last
+                    ? `${last.senderId === meId ? "You: " : ""}${last.text || (last.image ? "📷 Photo" : "")}`
+                    : "No messages yet"}
                 </p>
               </div>
               <div className="flex shrink-0 flex-col items-end gap-1">

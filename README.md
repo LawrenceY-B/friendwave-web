@@ -125,6 +125,11 @@ style: neutral colours that follow light and dark mode, with one blue for **Crea
   event, so every update goes through one `upsert` keyed by message id.
 - **Reconnects:** after a drop, it fetches the latest page to catch up on anything missed.
 - Delete your own messages (hover). Edits and deletes made elsewhere show up live.
+- **Photos:** the 🖼 button sends a photo, with whatever you've typed as its caption. It's shrunk in the browser,
+  uploaded straight to the API (`lib/upload.ts`), and shown at once from your device while it uploads. Tap a
+  photo to open it full size; the chat list says "📷 Photo".
+- **Typing:** while you type, the other person sees "typing…" in the header and three dots (the socket
+  `typing` event, at most every 2.5 s). The dots go when your message arrives, or 4 s after you stop.
 - **Unread:**
   - A red dot on Chats (bottom bar and header) while any chat has unread messages. It's set from
     `GET /api/chats/unread` and kept live by `components/unread-chats.tsx` (`message:new`, `chat:read`).
@@ -212,6 +217,18 @@ browser (3-30 letters, numbers, `.` or `_`) and by the API, which answers "Usern
 - **Pages are kept alive:** Next.js keeps visited pages alive in the background (React `<Activity>`), so
   components that must start fresh reset themselves when hidden: the story viewer, the new-post form after
   a successful post, and the chat room (which catches up on missed messages when it reconnects).
+
+## Your menu, theme and account
+
+- **The ☰ on your own profile** (`components/header-menu.tsx`; it's the only place it appears) opens as a
+  dropdown on larger screens and a sheet on phones. The lines morph into an ✕ while it's open. It holds:
+  - **Appearance:** System / Light / Dark. Saved on this device (`lib/theme.ts`) and applied before the
+    first paint by a tiny script in `layout.tsx`, so there's no flash. Dark mode is a `dark` class on
+    `<html>` (`@custom-variant dark` in `globals.css`); "System" follows the device, even when it switches.
+  - **Log out.**
+  - **Delete account:** type your username to confirm. The API deletes everything of yours (posts,
+    comments, likes, chats, photos…), then you're logged out. If the API has Auth0 Management
+    credentials, your Auth0 login is deleted too.
 
 ## Install as an app (PWA)
 

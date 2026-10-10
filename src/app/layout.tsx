@@ -4,7 +4,9 @@ import { NavigationTracker } from "@/components/navigation-tracker";
 import { RealtimeProvider } from "@/components/realtime-provider";
 import { ServiceWorker } from "@/components/service-worker";
 import { SmoothScroll } from "@/components/smooth-scroll";
+import { ThemeWatcher } from "@/components/theme-watcher";
 import { MobileNav, UserMenu } from "@/components/user-menu";
+import { THEME_SCRIPT } from "@/lib/theme";
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Suspense } from "react";
@@ -41,8 +43,18 @@ export const viewport: Viewport = {
 // `modal` is the slot app/@modal renders into: a post opened on top of the current page
 export default function RootLayout({ children, modal }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    // suppressHydrationWarning: the theme script sets <html>'s class before React loads
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+    >
+      <head>
+        {/* Applies your theme (System / Light / Dark) before the first paint: no flash */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body className="flex min-h-full flex-col bg-neutral-50 dark:bg-black">
+        <ThemeWatcher />
         {/* One live connection for the whole tab (chat, live counts, notifications, presence) */}
         <RealtimeProvider>
           <SmoothScroll>

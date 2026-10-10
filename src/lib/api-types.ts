@@ -294,7 +294,69 @@ export interface paths {
     };
     put?: never;
     post?: never;
-    delete?: never;
+    /** Delete your account and everything of yours (type your username to confirm) */
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          "application/json": {
+            /** @description Your username */
+            confirm: string;
+          };
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              /** @constant */
+              success: true;
+              data: {
+                deleted: boolean;
+                /** @description Whether your Auth0 login was deleted too (needs the API's Auth0 Management credentials) */
+                auth0Deleted: boolean;
+              };
+            };
+          };
+        };
+        /** @description Invalid input */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
+        };
+        /** @description Missing, invalid or expired token */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
+        };
+        /** @description Not found (or not yours) */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
+        };
+      };
+    };
     options?: never;
     head?: never;
     /** Update your profile (send only the fields you change) */
@@ -2695,7 +2757,7 @@ export interface paths {
       };
     };
     put?: never;
-    /** Send a message (also delivered live as message:new) */
+    /** Send a message: JSON { text }, or multipart with an image (and optional text). Also delivered live as message:new */
     post: {
       parameters: {
         query?: never;
@@ -2709,6 +2771,14 @@ export interface paths {
         content: {
           "application/json": {
             text: string;
+          };
+          "multipart/form-data": {
+            /**
+             * Format: binary
+             * @description Image, max 5 MB
+             */
+            image: string;
+            text?: string;
           };
         };
       };
@@ -2981,7 +3051,10 @@ export interface components {
       id: string;
       chatId: string;
       senderId: string;
+      /** @description Empty for a photo without a caption */
       text: string;
+      /** @description Photo URL, if the message has one */
+      image: string | null;
       /** Format: date-time */
       createdAt: string;
       /** Format: date-time */
