@@ -4,11 +4,12 @@ import type { StoryGroup } from "@/interfaces/api";
 import { deleteStory } from "@/lib/actions";
 import { timeAgo } from "@/lib/format";
 import { markStorySeen } from "@/lib/seen-stories";
-import { Trash2, X } from "lucide-react";
+import { ChevronRight, Trash2, X } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, useTransition } from "react";
 import { Avatar } from "./avatar";
+import { useBack } from "./navigation-tracker";
 
 const DURATION_MS = 5000;
 const HOLD_MS = 250; // pressing longer than this pauses instead of skipping
@@ -24,7 +25,11 @@ export function StoryViewer({ groups: initialGroups, startIndex, meId }: Props) 
   const [groups, setGroups] = useState(initialGroups);
   const [position, setPosition] = useState({ group: startIndex, story: 0 });
   const [paused, setPaused] = useState(false);
+  // The story whose "See post" bubble is showing (tap the post to show it)
+  const [bubbleFor, setBubbleFor] = useState<string | null>(null);
   const [deleting, startDeleting] = useTransition();
+  // "See post" opens the post on top of the stories; they wait underneath until it's closed
+  const hidden = usePathname() !== "/stories";
   const pressedAt = useRef(0);
 
   // Next.js keeps visited pages alive in the background (React <Activity>) and restores
@@ -35,13 +40,16 @@ export function StoryViewer({ groups: initialGroups, startIndex, meId }: Props) 
       setGroups(initialGroups);
       setPosition({ group: startIndex, story: 0 });
       setPaused(false);
+      setBubbleFor(null);
     };
   }, [initialGroups, startIndex]);
 
   const group = groups[position.group];
   const story = group?.stories[position.story];
 
-  const close = useCallback(() => router.push("/"), [router]);
+  // Back to wherever the stories were opened from (feed, a profile's ring); the feed if
+  // there's no in-app page behind (opened from a link)
+  const close = useBack("/");
 
   const next = useCallback(() => {
     const { group: g, story: s } = position;
@@ -61,30 +69,36 @@ export function StoryViewer({ groups: initialGroups, startIndex, meId }: Props) 
     if (story) markStorySeen(story.id);
   }, [story]);
 
-  // Keyboard: ← → to move, Esc to close
+  // Keyboard: ← → to move, Esc to close the bubble, then the stories
   useEffect(() => {
+    if (hidden) return; // the post on top has the keyboard
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight") next();
+      if (e.key === "Escape" && bubbleFor) setBubbleFor(null);
+      else if (e.key === "ArrowRight") next();
       else if (e.key === "ArrowLeft") prev();
       else if (e.key === "Escape") close();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [next, prev, close]);
+  }, [next, prev, close, hidden, bubbleFor]);
 
   if (!group || !story) return null;
   const isMine = group.author.id === meId;
   const originalAuthor = story.post.author && story.post.author.id !== group.author.id ? story.post.author : null;
   const image = story.post.images[0];
+  const bubbleOpen = bubbleFor === story.id;
 
-  // A tap moves; a press-and-hold only pauses
+  // A tap moves; a press-and-hold only pauses. With the bubble open, a tap anywhere else just
+  // dismisses it.
   const pressStart = () => {
     pressedAt.current = Date.now();
     setPaused(true);
   };
   const pressEnd = (move: () => void) => () => {
     setPaused(false);
-    if (Date.now() - pressedAt.current < HOLD_MS) move();
+    if (Date.now() - pressedAt.current >= HOLD_MS) return;
+    if (bubbleOpen) setBubbleFor(null);
+    else move();
   };
 
   function remove() {
@@ -111,12 +125,51 @@ export function StoryViewer({ groups: initialGroups, startIndex, meId }: Props) 
     >
       <div className="relative h-full max-h-[56rem] w-full max-w-md overflow-hidden bg-neutral-900 sm:rounded-xl">
         {image && (
-          // eslint-disable-next-line @next/next/no-img-element -- full-screen story image from the API's media route
-          <img
-            src={image}
-            alt={story.post.caption || `Story by ${group.author.username}`}
-            className="absolute inset-0 size-full object-contain"
-          />
+          <>
+            {/* Blurred backdrop of the same photo */}
+            {/* eslint-disable-next-line @next/next/no-img-element -- story image from the API's media route */}
+            <img
+              src={image}
+              alt=""
+              aria-hidden
+              className="absolute inset-0 size-full scale-110 object-cover opacity-50 blur-2xl"
+            />
+            {/* The post as a card in the middle, above the tap areas: tapping it offers "See post" */}
+            <div className="absolute inset-x-6 top-1/2 z-10 -translate-y-1/2">
+              <button
+                type="button"
+                // Like the rest of the story: hold to pause; a tap toggles the bubble
+                onPointerDown={pressStart}
+                onPointerUp={pressEnd(() => setBubbleFor(story.id))}
+                onPointerLeave={() => setPaused(false)}
+                // Keyboard (Enter/Space) has no pointer events
+                onClick={(e) => e.detail === 0 && setBubbleFor(bubbleOpen ? null : story.id)}
+                aria-expanded={bubbleOpen}
+                aria-label="Show post options"
+                className="block w-full overflow-hidden rounded-xl shadow-2xl"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element -- story image from the API's media route */}
+                <img
+                  src={image}
+                  alt={story.post.caption || `Story by ${group.author.username}`}
+                  className="max-h-[60vh] w-full object-cover"
+                />
+              </button>
+              {bubbleOpen && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setBubbleFor(null); // gone when you come back to the story
+                    router.push(`/posts/${story.post.id}`);
+                  }}
+                  className="absolute top-1/2 left-1/2 flex -translate-1/2 items-center gap-1 rounded-full bg-white px-4 py-2 text-sm font-semibold text-black shadow-lg"
+                >
+                  See post
+                  <ChevronRight className="size-4" />
+                </button>
+              )}
+            </div>
+          </>
         )}
 
         {/* Progress: one bar per story; the current one fills over DURATION_MS, then moves on */}
@@ -132,7 +185,7 @@ export function StoryViewer({ groups: initialGroups, startIndex, meId }: Props) 
                   onAnimationEnd={next}
                   style={{
                     animation: `story-progress ${DURATION_MS}ms linear forwards`,
-                    animationPlayState: paused || deleting ? "paused" : "running",
+                    animationPlayState: paused || deleting || bubbleOpen || hidden ? "paused" : "running",
                   }}
                 />
               )}
@@ -203,12 +256,11 @@ export function StoryViewer({ groups: initialGroups, startIndex, meId }: Props) 
           onPointerLeave={() => setPaused(false)}
         />
 
-        <footer className="absolute inset-x-0 bottom-0 z-10 space-y-1 bg-linear-to-t from-black/70 to-transparent p-4 text-white">
-          {story.post.caption && <p className="text-sm">{story.post.caption}</p>}
-          <Link href={`/posts/${story.post.id}`} className="text-xs text-white/80 underline">
-            View post
-          </Link>
-        </footer>
+        {story.post.caption && (
+          <footer className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-linear-to-t from-black/70 to-transparent p-4 text-white">
+            <p className="text-sm">{story.post.caption}</p>
+          </footer>
+        )}
       </div>
     </div>
   );

@@ -1,12 +1,13 @@
 "use client";
 
-import type { Comment } from "@/interfaces/api";
+import type { Comment, Reply } from "@/interfaces/api";
 import { addComment, addReply, loadComments, removeComment, removeReply } from "@/lib/actions";
 import { timeAgo } from "@/lib/format";
 import { SendHorizontal, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { type FormEvent, useState, useTransition } from "react";
 import { Avatar } from "./avatar";
+import { useSocketEvent, useWatchPosts } from "./realtime-provider";
 
 interface Props {
   postId: string;
@@ -26,8 +27,38 @@ export function Comments({ postId, postAuthorId, meId, comments, nextCursor }: P
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  const seen = new Set(comments.map((c) => c.id));
-  const shown = [...comments, ...older.filter((c) => !seen.has(c.id))];
+  // Live changes from other people, layered over what the server rendered.
+  // Everything is matched by id, so a change that also arrives in the server's
+  // next render (e.g. your own comment) never shows twice.
+  const [liveNew, setLiveNew] = useState<Comment[]>([]);
+  const [liveReplies, setLiveReplies] = useState<Record<string, Reply[]>>({});
+  const [removed, setRemoved] = useState<Set<string>>(new Set());
+  useWatchPosts([postId]);
+  useSocketEvent<{ postId: string; comment: Comment }>("comment:new", (e) => {
+    if (e.postId === postId)
+      setLiveNew((prev) => (prev.some((c) => c.id === e.comment.id) ? prev : [e.comment, ...prev]));
+  });
+  useSocketEvent<{ postId: string; commentId: string }>("comment:deleted", (e) => {
+    if (e.postId === postId) setRemoved((prev) => new Set(prev).add(e.commentId));
+  });
+  useSocketEvent<{ postId: string; commentId: string; reply: Reply }>("reply:new", (e) => {
+    if (e.postId !== postId) return;
+    setLiveReplies((prev) => ({ ...prev, [e.commentId]: [...(prev[e.commentId] ?? []), e.reply] }));
+  });
+  useSocketEvent<{ postId: string; replyId: string }>("reply:deleted", (e) => {
+    if (e.postId === postId) setRemoved((prev) => new Set(prev).add(e.replyId));
+  });
+
+  const seen = new Set<string>();
+  const shown = [...liveNew, ...comments, ...older]
+    .filter((c) => !removed.has(c.id) && !seen.has(c.id) && seen.add(c.id))
+    .map((c) => {
+      const replyIds = new Set<string>();
+      const replies = [...c.replies, ...(liveReplies[c.id] ?? [])].filter(
+        (r) => !removed.has(r.id) && !replyIds.has(r.id) && replyIds.add(r.id)
+      );
+      return { ...c, replies };
+    });
 
   // Runs a Server Action; the server re-renders this page with the result
   const run = (action: () => Promise<unknown>, onDone?: () => void) => {

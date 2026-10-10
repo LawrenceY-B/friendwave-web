@@ -9,6 +9,9 @@ import { io } from "socket.io-client";
 // fresh token is fetched on every (re)connect: an expired token can't strand the socket.
 export function connectSocket() {
   return io(process.env.NEXT_PUBLIC_API_URL, {
+    // WebSocket straight away (one connection, no long-polling requests); polling only
+    // as a fallback for networks that block WebSockets
+    transports: ["websocket", "polling"],
     auth: (callback) => {
       getAccessToken()
         .then((token) => callback({ token }))

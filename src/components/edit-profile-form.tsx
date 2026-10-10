@@ -5,9 +5,9 @@ import { updateProfile } from "@/lib/actions";
 import { AVATAR_MAX_SIDE, MAX_BIO, MAX_IMAGE_BYTES, MAX_NAME, USERNAME_HINT } from "@/lib/limits";
 import { shrinkImage } from "@/lib/resize-image";
 import { Camera } from "lucide-react";
-import Link from "next/link";
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { Avatar } from "./avatar";
+import { useBack } from "./navigation-tracker";
 
 const inputClass =
   "w-full rounded-lg border border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none focus:border-blue-500 invalid:border-red-400 dark:border-neutral-700";
@@ -19,6 +19,8 @@ export function EditProfileForm({ profile }: { profile: Profile }) {
   const [bio, setBio] = useState(profile.bio);
   const [avatar, setAvatar] = useState<File | null>(null);
   const [pickError, setPickError] = useState<string | null>(null);
+  // Back to where you came from; your profile if you opened this page directly
+  const cancel = useBack(`/users/${profile.id}`);
 
   const preview = useMemo(() => (avatar ? URL.createObjectURL(avatar) : null), [avatar]);
   useEffect(() => () => void (preview && URL.revokeObjectURL(preview)), [preview]);
@@ -150,9 +152,9 @@ export function EditProfileForm({ profile }: { profile: Profile }) {
         >
           {pending ? "Saving…" : "Save"}
         </button>
-        <Link href={`/users/${profile.id}`} className="text-sm text-neutral-500 hover:underline">
+        <button type="button" onClick={cancel} className="text-sm text-neutral-500 hover:underline">
           Cancel
-        </Link>
+        </button>
       </div>
     </form>
   );

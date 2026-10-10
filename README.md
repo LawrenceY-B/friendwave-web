@@ -30,9 +30,11 @@ Browser ──▶ Next.js server ──(Bearer access token)──▶ Friendwave
 
 - **Pages fetch on the server.** They're Server Components that call the API through
   `src/lib/api.ts` (`api()` for one object, `apiPage()` for lists with `nextCursor`).
-- **Live chat is the exception: it connects from the browser.** `src/lib/socket.ts` gets a token with
-  the SDK's client `getAccessToken()` (served by `/auth/access-token`) and opens a socket.io connection
-  to the API. A fresh token is fetched on every reconnect.
+- **Live updates are the exception: they come straight to the browser.** One socket.io connection per tab
+  (`components/realtime-provider.tsx`, in the layout) is opened when you're logged in. `src/lib/socket.ts`
+  gets a token with the SDK's client `getAccessToken()` (served by `/auth/access-token`) and fetches a fresh
+  one on every reconnect. Components use the provider's hooks: `useSocketEvent(event, handler)`,
+  `useWatchPosts(ids)` (subscribe to the posts on screen) and `usePresence(userIds)`.
 - **Mutations** (like, follow) are Server Actions in `src/lib/actions.ts`, called from small Client
   Components that update instantly (optimistic UI).
 - **Cache Components** is on, so anything that reads the session renders inside `<Suspense>`. The
@@ -64,6 +66,17 @@ src/
 | `pnpm gen:api` | regenerate API types |
 
 `NEXT_DIST_DIR=.next-test pnpm build` builds a separate copy (used by tests, so they never touch `.next`).
+
+## Live updates
+
+- **Likes and comment counts** change on screen as other people like and comment (`components/post-live.tsx`
+  holds each post's like state, shared by the heart button, double tap and the comment count).
+- **Comments and replies** from others appear (and disappear) while a post is open, without duplicates.
+- **"↑ New posts"** shows on the feed when someone you follow posts; tap it to load them.
+- **Notifications** (`/notifications`, the bell in the header): follows, likes, comments, replies and story
+  shares. The red dot appears live; opening the page marks everything read.
+- **Online:** a green dot on the picture in the chat list and the chat header when the other person has the
+  app open.
 
 ## Live chat (`src/components/chat-room.tsx`)
 
@@ -121,9 +134,16 @@ browser (3-30 letters, numbers, `.` or `_`) and by the API, which answers "Usern
 ## Search and stories
 
 - **`/search`** (magnifier in the header): results as you type, with Follow / Following on each person.
+  With nothing typed it shows **Recent** (people you opened from search, remembered in this browser) and
+  **Suggested for you**: people followed by people you follow ("Followed by bob and 2 others"). An empty
+  feed shows the same suggestions.
+- **Double tap a photo to like** it (a heart pops). It only likes, never unlikes; swipes don't count.
 - **Stories:** a bar at the top of the feed (yours first, then people you follow). The full-screen viewer
   auto-advances every 5s; tap the left/right, or use ←/→, to move; hold to pause; Esc to close. Rings turn
   grey once seen (remembered in this browser). "Add to your story" is on your posts; delete from the viewer.
+  Tap the post in a story for **See post**: the story pauses and the post opens on top; close it to carry on.
+- **Back buttons** (`components/navigation-tracker.tsx`, `useBack`): go back if you came from another page
+  in the app; otherwise (opened from a link, or after a refresh) go to a sensible page, usually the feed.
 - **Pages are kept alive:** Next.js keeps visited pages alive in the background (React `<Activity>`), so
   components that must start fresh reset themselves when hidden: the story viewer, the new-post form after
   a successful post, and the chat room (which catches up on missed messages when it reconnects).

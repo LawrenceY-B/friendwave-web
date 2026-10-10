@@ -2,15 +2,13 @@
 
 import type { Chat, Message } from "@/interfaces/api";
 import { deleteMessage, loadMessages, sendMessage } from "@/lib/actions";
-import { connectSocket } from "@/lib/socket";
 import { ArrowLeft, SendHorizontal, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { type FormEvent, type KeyboardEvent, useEffect, useRef, useState, useTransition } from "react";
-import type { Socket } from "socket.io-client";
 import { Avatar } from "./avatar";
+import { usePresence, useRealtime, useSocketEvent } from "./realtime-provider";
 
 type UiMessage = Message & { pending?: boolean };
-type Status = "connecting" | "live" | "offline";
 
 // Adds a message, or replaces the one with the same id, keeping oldest → newest order.
 // The same message can arrive twice (the send acknowledgement AND the live
@@ -33,51 +31,50 @@ interface Props {
 export function ChatRoom({ chat, meId, initialMessages, initialCursor }: Props) {
   const [messages, setMessages] = useState<UiMessage[]>(() => [...initialMessages].reverse());
   const [cursor, setCursor] = useState(initialCursor);
-  const [status, setStatus] = useState<Status>("connecting");
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loadingOlder, startLoadingOlder] = useTransition();
-  const socketRef = useRef<Socket | null>(null);
   const bottomRef = useRef<HTMLLIElement>(null);
   const lastIdRef = useRef<string | undefined>(undefined);
-  const connectedBefore = useRef(false);
   const other = chat.participants[0] ?? null;
+  // The tab's shared live connection (components/realtime-provider.tsx)
+  const { socket, status } = useRealtime();
+  const presence = usePresence(other ? [other.id] : []);
+  const otherOnline = other ? presence[other.id] === true : false;
 
-  // ---- live connection ----
+  // ---- live updates ----
+  useSocketEvent<Message>("message:new", (message) => {
+    if (message.chatId === chat.id) setMessages((prev) => upsert(prev, message));
+  });
+  useSocketEvent<Message>("message:updated", (message) => {
+    if (message.chatId === chat.id) setMessages((prev) => upsert(prev, message));
+  });
+  useSocketEvent<{ id: string; chatId: string }>("message:deleted", ({ id, chatId }) => {
+    if (chatId === chat.id) setMessages((prev) => prev.filter((m) => m.id !== id));
+  });
+
+  // Catch up on anything missed: after the connection drops and comes back, and after
+  // returning to this page (Next.js keeps it alive in the background, but it stops
+  // listening while hidden)
+  const catchUp = async () => {
+    const latest = await loadMessages(chat.id).catch(() => null);
+    if (latest) setMessages((prev) => latest.items.reduce(upsert, prev));
+  };
+  const wasOffline = useRef(false);
   useEffect(() => {
-    const socket = connectSocket();
-    socketRef.current = socket;
-    socket.on("connect", async () => {
-      setStatus("live");
-      // Catch up on anything sent while we weren't connected: after a dropped
-      // connection, or after coming back to this page (Next.js keeps it alive in
-      // the background, but its socket is closed while hidden)
-      if (connectedBefore.current) {
-        const latest = await loadMessages(chat.id).catch(() => null);
-        if (latest) setMessages((prev) => latest.items.reduce(upsert, prev));
-      }
-      connectedBefore.current = true;
-    });
-    const goOffline = () => setStatus("offline");
-    socket.on("disconnect", goOffline);
-    socket.on("connect_error", goOffline);
-
-    socket.on("message:new", (message: Message) => {
-      if (message.chatId === chat.id) setMessages((prev) => upsert(prev, message));
-    });
-    socket.on("message:updated", (message: Message) => {
-      if (message.chatId === chat.id) setMessages((prev) => upsert(prev, message));
-    });
-    socket.on("message:deleted", ({ id, chatId }: { id: string; chatId: string }) => {
-      if (chatId === chat.id) setMessages((prev) => prev.filter((m) => m.id !== id));
-    });
-
-    // Leaving the page closes the connection
-    return () => {
-      socket.disconnect();
-      socketRef.current = null;
-    };
-  }, [chat.id]);
+    if (status === "offline") wasOffline.current = true;
+    if (status === "live" && wasOffline.current) {
+      wasOffline.current = false;
+      void catchUp();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only react to connection changes
+  }, [status]);
+  const shownBefore = useRef(false);
+  useEffect(() => {
+    if (shownBefore.current) void catchUp();
+    shownBefore.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs each time the page is shown
+  }, []);
 
   // ---- scroll to the newest message when one is added at the bottom ----
   useEffect(() => {
@@ -110,7 +107,6 @@ export function ChatRoom({ chat, meId, initialMessages, initialCursor }: Props) 
     setMessages((prev) => upsert(prev, temp));
 
     try {
-      const socket = socketRef.current;
       let saved: Message;
       if (socket?.connected) {
         const response = await socket.timeout(5000).emitWithAck("message:send", { chatId: chat.id, text });
@@ -171,7 +167,7 @@ export function ChatRoom({ chat, meId, initialMessages, initialCursor }: Props) 
         >
           <ArrowLeft className="size-5" />
         </Link>
-        <Avatar user={other} size="sm" />
+        <Avatar user={other} size="sm" online={otherOnline} />
         {other ? (
           <Link href={`/users/${other.id}`} className="font-semibold hover:underline">
             {other.username}
@@ -179,12 +175,12 @@ export function ChatRoom({ chat, meId, initialMessages, initialCursor }: Props) 
         ) : (
           <span className="text-neutral-500">Deleted user</span>
         )}
-        <span className="ml-auto flex items-center gap-1.5 text-xs text-neutral-500" aria-live="polite">
-          <span
-            className={`size-2 rounded-full ${status === "live" ? "bg-green-500" : status === "offline" ? "bg-red-500" : "bg-amber-400"}`}
-          />
-          {status === "live" ? "Live" : status === "offline" ? "Reconnecting…" : "Connecting…"}
-        </span>
+        {/* Only shown when *your* connection is down; otherwise the green dot says it all */}
+        {socket && status === "offline" && (
+          <span className="ml-auto text-xs text-neutral-500" aria-live="polite">
+            Reconnecting…
+          </span>
+        )}
       </header>
 
       <ol className="flex-1 space-y-2 overflow-y-auto p-4" aria-label="Messages">

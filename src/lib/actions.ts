@@ -176,3 +176,9 @@ export async function listPeople(userId: string, which: "followers" | "following
   if (!isId(userId) || (which !== "followers" && which !== "following")) throw new Error("Invalid request");
   return (await apiPage<UserSummary>(`/api/users/${userId}/${which}?limit=50`)).items;
 }
+
+// ---- notifications ----
+
+export async function markNotificationsRead() {
+  await api("/api/notifications/read", { method: "POST" });
+}

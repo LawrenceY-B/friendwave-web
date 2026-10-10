@@ -2,7 +2,7 @@ import type { Comment, Post, Profile } from "@/interfaces/api";
 import { api, ApiError, apiPage } from "@/lib/api";
 import { notFound } from "next/navigation";
 import { Comments } from "./comments";
-import { PostCaption, PostCard, PostCounts, PostHeader } from "./post-card";
+import { PostCaption, PostCard, PostCounts, PostHeader, PostLive } from "./post-card";
 import { PostImages } from "./post-images";
 
 async function loadPost(id: string) {
@@ -43,22 +43,24 @@ export async function PostDetail({ id, variant }: { id: string; variant: "page" 
   }
 
   return (
-    <div className="grid h-full grid-rows-[auto_1fr] sm:grid-cols-[minmax(0,1fr)_22rem] sm:grid-rows-1">
-      <div className="flex items-center bg-black">
-        <div className="w-full">
-          <PostImages images={post.images} alt={post.caption || `Photo by ${post.author?.username ?? "unknown"}`} />
+    <PostLive post={post}>
+      <div className="grid h-full grid-rows-[auto_1fr] sm:grid-cols-[minmax(0,1fr)_22rem] sm:grid-rows-1">
+        <div className="flex items-center bg-black">
+          <div className="w-full">
+            <PostImages images={post.images} alt={post.caption || `Photo by ${post.author?.username ?? "unknown"}`} />
+          </div>
+        </div>
+        <div className="flex min-h-0 flex-col border-neutral-200 sm:border-l dark:border-neutral-800">
+          <PostHeader post={post} meId={me.id} />
+          <div className="flex-1 space-y-4 overflow-y-auto border-y border-neutral-200 p-3 dark:border-neutral-800">
+            <PostCaption post={post} />
+            {commentsList}
+          </div>
+          <div className="p-3">
+            <PostCounts post={post} />
+          </div>
         </div>
       </div>
-      <div className="flex min-h-0 flex-col border-neutral-200 sm:border-l dark:border-neutral-800">
-        <PostHeader post={post} meId={me.id} />
-        <div className="flex-1 space-y-4 overflow-y-auto border-y border-neutral-200 p-3 dark:border-neutral-800">
-          <PostCaption post={post} />
-          {commentsList}
-        </div>
-        <div className="p-3">
-          <PostCounts post={post} />
-        </div>
-      </div>
-    </div>
+    </PostLive>
   );
 }
