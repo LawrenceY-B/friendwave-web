@@ -202,7 +202,8 @@ export function StoryViewer({ groups: initialGroups, startIndex, meId }: Props) 
                 onClick={(e) => e.detail === 0 && setBubbleFor(bubbleOpen ? null : story.id)}
                 aria-expanded={bubbleOpen}
                 aria-label="Show post options"
-                className="block w-full overflow-hidden rounded-xl shadow-2xl"
+                onContextMenu={(e) => e.preventDefault()} // a long press pauses; no image menu or drag
+                className="block w-full overflow-hidden rounded-xl shadow-2xl select-none [-webkit-touch-callout:none] [&_img]:[-webkit-user-drag:none]"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element -- story image from the API's media route */}
                 <img

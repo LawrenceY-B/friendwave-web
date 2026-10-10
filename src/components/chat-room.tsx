@@ -1,9 +1,10 @@
 "use client";
 
 import type { Chat, Message } from "@/interfaces/api";
-import { deleteMessage, loadMessages, sendMessage } from "@/lib/actions";
+import { deleteMessage, loadMessages, markChatRead, sendMessage } from "@/lib/actions";
 import { useHideAppHeader } from "@/lib/hide-app-header";
 import { gsap, reducedMotion, useGSAP } from "@/lib/motion";
+import { markChatSeen } from "@/lib/unread-chats";
 import { ArrowLeft, Check, ChevronDown, Clock3, SendHorizontal, Trash2 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -80,6 +81,29 @@ interface Props {
 
 export function ChatRoom({ chat, meId, initialMessages, initialCursor }: Props) {
   const [messages, setMessages] = useState<UiMessage[]>(() => [...initialMessages].reverse());
+  // Where "Unread messages" goes: above the first of the messages that were unread when you
+  // opened the chat (the last N from the other person). Stays put while you're here.
+  const [firstUnreadId] = useState(() => {
+    let left = chat.unreadCount ?? 0;
+    const list = [...initialMessages].reverse();
+    for (let i = list.length - 1; i >= 0 && left > 0; i--) {
+      if (list[i].senderId !== meId && --left === 0) return list[i].id;
+    }
+    return left > 0 && list.length ? (list.find((m) => m.senderId !== meId)?.id ?? null) : null;
+  });
+
+  // Opening (or coming back to) the chat reads it; so does a message arriving while it's open
+  const readTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const markRead = () => {
+    markChatSeen(chat.id);
+    clearTimeout(readTimer.current);
+    readTimer.current = setTimeout(() => void markChatRead(chat.id), 500);
+  };
+  useEffect(() => {
+    markRead();
+    return () => clearTimeout(readTimer.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- each time the chat is shown
+  }, []);
   const [cursor, setCursor] = useState(initialCursor);
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -92,7 +116,9 @@ export function ChatRoom({ chat, meId, initialMessages, initialCursor }: Props) 
 
   // ---- live updates ----
   useSocketEvent<Message>("message:new", (message) => {
-    if (message.chatId === chat.id) setMessages((prev) => upsert(prev, message));
+    if (message.chatId !== chat.id) return;
+    setMessages((prev) => upsert(prev, message));
+    if (message.senderId !== meId) markRead();
   });
   useSocketEvent<Message>("message:updated", (message) => {
     if (message.chatId === chat.id) setMessages((prev) => upsert(prev, message));
@@ -236,7 +262,13 @@ export function ChatRoom({ chat, meId, initialMessages, initialCursor }: Props) 
     previousLast.current = last;
     if (!last || last.id === before?.id) return;
     if (!before) {
-      toBottom(false); // first render: start at the latest
+      // First render: start at "Unread messages" if they don't all fit, else at the latest
+      const divider = scroller.current?.querySelector<HTMLElement>("[data-testid=unread-divider]");
+      const el = scroller.current;
+      if (divider && el && el.scrollHeight - divider.offsetTop > el.clientHeight - 120) {
+        el.scrollTop = divider.offsetTop - 88;
+        nearBottom.current = false;
+      } else toBottom(false);
       return;
     }
     const mine = last.senderId === meId;
@@ -397,6 +429,19 @@ export function ChatRoom({ chat, meId, initialMessages, initialCursor }: Props) 
                 {newDay && (
                   <li className="pointer-events-none sticky top-[4.75rem] z-10 my-2 flex justify-center">
                     <span className={pill}>{dayLabel(message.createdAt)}</span>
+                  </li>
+                )}
+                {message.id === firstUnreadId && (
+                  <li
+                    data-testid="unread-divider"
+                    className="my-3 flex items-center gap-3"
+                    aria-label="Unread messages"
+                  >
+                    <span className="h-px flex-1 bg-blue-500/40" />
+                    <span className="rounded-full bg-blue-600 px-3 py-1 text-xs font-semibold text-white shadow">
+                      Unread messages
+                    </span>
+                    <span className="h-px flex-1 bg-blue-500/40" />
                   </li>
                 )}
                 <li

@@ -49,6 +49,18 @@ export async function sendMessage(chatId: string, text: string) {
 }
 
 // Newest first. Without a cursor: the latest page (used to catch up after a reconnect).
+// The chat list, fresh (when you come back to it)
+export async function loadChats() {
+  return api<Chat[]>("/api/chats");
+}
+
+// You've seen this chat (opened it, or a message arrived while it's open). Quietly does
+// nothing against an older API without read tracking.
+export async function markChatRead(chatId: string) {
+  if (!isId(chatId)) throw new Error("Invalid id");
+  await api(`/api/chats/${chatId}/read`, { method: "POST" }).catch(() => {});
+}
+
 export async function loadMessages(chatId: string, cursor?: string) {
   if (!isId(chatId) || (cursor !== undefined && !isId(cursor))) throw new Error("Invalid id");
   return apiPage<Message>(`/api/chats/${chatId}/messages?limit=30${cursor ? `&cursor=${cursor}` : ""}`);

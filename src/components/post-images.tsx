@@ -80,9 +80,11 @@ export function PostImages({ images, alt }: { images: string[]; alt: string }) {
         onPointerDown={onPointerDown}
         onPointerUp={onPointerUp}
         onPointerCancel={() => (down.current = null)}
+        // A long press shouldn't pick the photo up (iOS preview/drag) or open the image menu
+        onContextMenu={(e) => e.preventDefault()}
         data-lenis-prevent-horizontal
         // "manipulation": keep swiping/pinching, but no double-tap-to-zoom
-        className="flex touch-manipulation snap-x snap-mandatory [scrollbar-width:none] overflow-x-auto [&::-webkit-scrollbar]:hidden"
+        className="flex touch-manipulation snap-x snap-mandatory [scrollbar-width:none] overflow-x-auto select-none [-webkit-touch-callout:none] [&_img]:[-webkit-user-drag:none] [&::-webkit-scrollbar]:hidden"
       >
         {images.map((src, i) => (
           <Image

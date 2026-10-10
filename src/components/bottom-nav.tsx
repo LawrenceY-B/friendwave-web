@@ -7,6 +7,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { type ReactNode, useRef } from "react";
+import { ChatsDot, useChatsLabel } from "./unread-chats";
 
 interface Tab {
   href: string;
@@ -37,7 +38,12 @@ function tabsFor(me: UserSummary | null): Tab[] {
       href: "/chats",
       label: "Chats",
       isActive: (p) => p === "/chats",
-      icon: (a) => <MessageCircle {...iconProps(a)} />,
+      icon: (a) => (
+        <span className="relative">
+          <MessageCircle {...iconProps(a)} />
+          <ChatsDot />
+        </span>
+      ),
     },
   ];
   if (me)
@@ -70,6 +76,7 @@ export function BottomNav({ me }: { me: UserSummary | null }) {
   const lens = useRef<HTMLLIElement>(null);
   const placed = useRef(false);
   const tabs = tabsFor(me);
+  const chatsLabel = useChatsLabel(); // "Chats (2 unread)"
   const activeIndex = tabs.findIndex((t) => t.isActive(pathname));
 
   // The glass "lens" glides to the active tab, stretching like jelly on the way
@@ -123,8 +130,8 @@ export function BottomNav({ me }: { me: UserSummary | null }) {
             <li key={label} className="flex-1">
               <Link
                 href={href}
-                aria-label={label}
-                title={label}
+                aria-label={label === "Chats" ? chatsLabel : label}
+                title={label === "Chats" ? chatsLabel : label}
                 aria-current={active ? "page" : undefined}
                 className={`relative flex h-11 w-full items-center justify-center rounded-full transition-opacity duration-300 active:scale-90 ${
                   active ? "" : "opacity-70 hover:opacity-100"
