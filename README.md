@@ -112,6 +112,12 @@ src/
   event, so every update goes through one `upsert` keyed by message id.
 - **Reconnects:** after a drop, it fetches the latest page to catch up on anything missed.
 - Delete your own messages (hover). Edits and deletes made elsewhere show up live.
+- **Unread:**
+  - A red dot on Chats (bottom bar and header) while any chat has unread messages. It's set from
+    `GET /api/chats/unread` and kept live by `components/unread-chats.tsx` (`message:new`, `chat:read`).
+  - The chat list shows unread chats in bold with a count badge and the latest message as the preview.
+  - Opening a chat puts an "Unread messages" divider above them and marks the chat read
+    (`POST /api/chats/:id/read`). Your other tabs and devices clear too.
 - **Look (Telegram-style), full screen:**
   - **Screen:** a plain light or dark background, following the theme (`.chat-wallpaper` in `globals.css`). Floating glass pills
     sit on top: back, then name + status ("online", "last seen recently", or "Reconnecting…"), then their picture.
@@ -134,7 +140,8 @@ src/
   (swipe down to close) and appear centred on larger screens. Examples: the ⋮ on a post (your posts: Add to your
   story, Delete post with a second tap to confirm; others: Copy link, Go to profile), and "Following ▾" on a profile
   (Unfollow; Close Friends, Favourites, Mute and Restrict are marked *Coming soon*).
-- **Photos:** swipe, or use ‹ ›, with dots showing which photo you're on (`components/post-images.tsx`).
+- **Photos:** swipe, or use ‹ ›, with dots showing which photo you're on (`components/post-images.tsx`). A long press
+  doesn't pick the photo up or open the image menu (like Instagram).
   In the feed they run edge to edge across the centred column, with square corners. The header and the
   likes/caption rows are padded instead.
 - **Phone header = the page's title bar** (`components/header-title.tsx`, set by `<PageTitle>` on each page):

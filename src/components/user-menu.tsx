@@ -1,12 +1,13 @@
 import type { Profile } from "@/interfaces/api";
 import { api, ApiError } from "@/lib/api";
 import { getSession } from "@/lib/session";
-import { House, LogOut, type LucideIcon, MessageCircle, Search, SquarePlus } from "lucide-react";
+import { House, LogOut, type LucideIcon, Search, SquarePlus } from "lucide-react";
 import Link from "next/link";
 import { cache } from "react";
 import { Avatar } from "./avatar";
 import { BottomNav } from "./bottom-nav";
 import { NotificationBell } from "./notification-bell";
+import { ChatsNavIcon, UnreadChatsSync } from "./unread-chats";
 
 // Reads the session, so it must render inside <Suspense> (see layout.tsx)
 export async function UserMenu() {
@@ -24,7 +25,7 @@ export async function UserMenu() {
     );
   }
 
-  const [me, unread] = await Promise.all([loadMe(), loadUnread()]);
+  const [me, unread, unreadChats] = await Promise.all([loadMe(), loadUnread(), loadUnreadChats()]);
   if (!me) {
     // The API is down: keep the header usable instead of crashing the whole page
     return (
@@ -45,10 +46,12 @@ export async function UserMenu() {
         <NavIcon href="/" label="Feed" icon={House} />
         <NavIcon href="/search" label="Search people" icon={Search} />
         <NavIcon href="/create" label="New post" icon={SquarePlus} />
-        <NavIcon href="/chats" label="Chats" icon={MessageCircle} />
+        <ChatsNavIcon className={iconClass} />
       </div>
       {/* The bell stays in the header on phones too; your profile moves to the bottom bar */}
       <NotificationBell initialUnread={unread} />
+      {/* Keeps the red dot on Chats (here and in the bottom bar) live */}
+      <UnreadChatsSync initialIds={unreadChats} meId={me.id} />
       <Link
         href={`/users/${me.id}`}
         aria-label="Your profile"
@@ -99,6 +102,15 @@ export async function MobileNav() {
   if (!session) return null;
   const me = await loadMe().catch(() => null);
   return <BottomNav me={me && { id: me.id, username: me.username, name: me.name, avatarUrl: me.avatarUrl }} />;
+}
+
+// Chats with unread messages. [] if the API doesn't have this yet (an older deployment)
+async function loadUnreadChats() {
+  try {
+    return (await api<{ chatIds: string[] }>("/api/chats/unread")).chatIds;
+  } catch {
+    return [];
+  }
 }
 
 async function loadUnread() {
