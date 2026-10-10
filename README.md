@@ -79,6 +79,19 @@ src/
 - **Online:** a green dot on the picture in the chat list and the chat header when the other person has the
   app open.
 
+## Landing page (logged out)
+
+`components/landing/landing.tsx`, shown on `/` when you're not logged in. It's calm and in the app's own
+style: neutral colours that follow light and dark mode, with one blue for **Create account**.
+
+- **Backdrop:** a quiet sea of fine dots, three.js with a custom shader (`landing/wave-scene.ts`), loaded
+  only on this page.
+  - It swells slowly, ripples softly under the pointer, and steps back once you scroll past the hero.
+  - It pauses in background tabs. With reduced motion it's a still frame; without WebGL it isn't drawn at all.
+- **Hero:** the words fade up in turn.
+- **Showcase:** phones showing the real feed (with the double-tap heart), chat and stories level out as you scroll.
+- **Buttons:** **Create account** goes to `/auth/login?screen_hint=signup`; **Log in** goes to `/auth/login`.
+
 ## Motion (GSAP + Lenis)
 
 - **Smooth scrolling:** Lenis (`components/smooth-scroll.tsx`) eases mouse-wheel and trackpad scrolling,

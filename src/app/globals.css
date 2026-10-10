@@ -115,3 +115,18 @@
 html[data-fullscreen] [data-app-header] {
   visibility: hidden;
 }
+
+/* ---- Landing page (components/landing) ---- */
+/* No app header on the landing page: it has its own top bar */
+html:has([data-landing]) [data-app-header] {
+  display: none;
+}
+/* Hero pieces start hidden for their entrance, but show without JS or with reduced motion */
+.landing-start {
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce), (scripting: none) {
+  .landing-start {
+    opacity: 1;
+  }
+}
